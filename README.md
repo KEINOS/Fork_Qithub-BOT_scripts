@@ -15,7 +15,7 @@
 本体スクリプト（"scripts/[index.php](https://github.com/Qithub-BOT/scripts/blob/master/index.php)"）は、各プログラム言語で書かれたプラグインをCLI（Command Line Interface)を通して実行します。
 
 各プラグインは`scrpts/_scripts/`ディレクトリ下に「プラグインID」をディレクトリ名として設置されます。
-「プラグインID」は、原則として`scripts`リポジトリの[issue](https://github.com/Qithub-BOT/scripts/issues?utf8=%E2%9C%93&q=is%3Aissue%20)にて提案・要望されたissue番号と同等です。
+また、「プラグインID」は、原則として`scripts`リポジトリの[issue](https://github.com/Qithub-BOT/scripts/issues?utf8=%E2%9C%93&q=is%3Aissue%20)にて提案・要望されたissue番号と同等です。
 
 例えば [issue#10] で提案された「Hello worldをトゥートするだけの機能」は、 "[scripts / _scripts / issue10](https://github.com/Qithub-BOT/scripts/tree/master/_scripts/issue10) / [hello_world.php](https://github.com/Qithub-BOT/scripts/blob/master/_scripts/issue10/hello_world.php)" に設置されています。
 
@@ -39,7 +39,8 @@
 
 ### プラグイン作成の制約次項
 
-1. 本体スクリプトから呼び出される（実行される）スクリプト名は特に制限を設けていません。
-1. プラグインは自身のプラグイン・ディレクトリ以外にファイルを作成してはいけません。
-1. データファイルなど、プラグインが自動作成するファイルがある場合は、自身のプラグイン・ディレクトリ直下に".gitignore"で対象外にしてください。
+1. 本体スクリプトから呼び出される（実行される）**スクリプト名は特に制限を設けていません**。
+1. プラグインは**自身のプラグイン・ディレクトリ以外にファイルを作成してはいけません**が、自ディレクトリ内であればファイル／ディレクトリは自由に作成して構いません。
+1. データファイルなど、プラグインが自動作成するファイルがある場合は、自身のプラグイン・ディレクトリ直下に".gitignore"でそれらを対象外にして、**テンポラリ・ファイルはリポジトリに含めないようにしてください**。
+
 
