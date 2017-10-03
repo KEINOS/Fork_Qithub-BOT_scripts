@@ -23,9 +23,9 @@
 
 ### 実装済みのプラグイン
 
-| プラグインID | スクリプト名 | 開発言語　| 概要 | 定例処理対象 | 備考 |
+| プラグインID | スクリプト名 | 開発言語　| 概要 | 定例処理対象 | スコープ | 備考 |
 | --- | --- | :---: | --- | :---: | --- |
-| [issue10][issue#10] | hello_world.php | PHP | 「Hello world!」を　トゥートし、前回のトゥートを削除する　| ◯ | 定例処理の対象から外す予定 |
+| [issue10][issue#10] | hello_world.php | PHP | 「Hello world!」を　トゥートし、前回のトゥートを削除する　| ◯ | write | 定例処理の対象から外す予定 |
 
 [issue#10]:https://github.com/Qithub-BOT/scripts/issues/10
 
