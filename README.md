@@ -16,7 +16,7 @@
 
 ## BOT のプラグインについて
 
-本体スクリプト（"scripts/[index.php](https://github.com/Qithub-BOT/scripts/blob/master/index.php)"）は、各プログラム言語で書かれたプラグインをCLI（Command Line Interface)を通して実行します。
+本体スクリプト（"scripts/[index.php](https://github.com/Qithub-BOT/scripts/blob/master/index.php)"）は、各プログラム言語で書かれたプラグインをCLI（Command Line Interface)を通して実行し、トゥートする内容を取得します。
 
 詳しい仕様に関しては Qiitaコラボ記事（ yyyyyyyyy @ Qiita もしくは yyyyyyyyy @ GitHub）をご覧ください。
 
