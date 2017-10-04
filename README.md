@@ -20,10 +20,3 @@
 
 詳しい仕様に関しては Qiitaコラボ記事（ yyyyyyyyy @ Qiita もしくは yyyyyyyyy @ GitHub）をご覧ください。
 
-各プラグインは`scrpts/_scripts/`ディレクトリ下に「プラグインID」をディレクトリ名として設置されます。
-また、「プラグインID」は、原則として`scripts`リポジトリの[issue](https://github.com/Qithub-BOT/scripts/issues?utf8=%E2%9C%93&q=is%3Aissue%20)にて提案・要望されたissue番号と同等です。
-
-例えば [issue#10] で提案された「Hello worldをトゥートするだけの機能」は、 "[scripts / _scripts / issue10](https://github.com/Qithub-BOT/scripts/tree/master/_scripts/issue10) / [hello_world.php](https://github.com/Qithub-BOT/scripts/blob/master/_scripts/issue10/hello_world.php)" に設置されています。
-
-各プラグインは直接実行されることはなく、本体スクリプトからコマンドラインで実行される形で呼び出されますが、標準入力から渡された引数のデータを元に単体で動作／完結し、実行結果はスルーされ（`dev/null`に渡され）ます。
-
