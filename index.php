@@ -1,4 +1,5 @@
 <?php
+error_reporting(E_ALL);
 /**
  * Front to the 「Qithub」 application.
  *
@@ -13,51 +14,82 @@
  */
 
 /* =====================================================================
-    Main
-   ===================================================================== */
-/* ---------------------------------
     初期設定
-   --------------------------------- */
+   ===================================================================== */
 
 // 言語設定->日本語 地域->東京 にセット
 set_utf8_ja('Asia/Tokyo');
 
 // 定数設定エリア
-define('IS_MODE_DEBUG', $_GET['mode'] == 'debug');
+define('IS_MODE_DEBUG', isset($_GET['mode']) and ($_GET['mode'] == 'debug'));
 define('IS_PROC_REGULAR', ! isset($_GET['process'])); // 定例処理
 define('IS_PROC_DEMAND', isset($_GET['process']));    // 随時処理
 define('DIR_SEP', DIRECTORY_SEPARATOR);
 
-// 各種グローバル変数の設定エリア
+// 'system' および 'plugin' が使えるプログラム言語
 $extension_types = [
         'php'=>'.php',
         'python' =>'.py',
     ];
 
-/* ---------------------------------
-    各種外部APIに必要なキーの取得
-   --------------------------------- */
-$keys_api = get_api_keys('../../qithub.conf.json', 'qiitadon');
-
+/* =====================================================================
+    メイン
+   ===================================================================== */
 
 /* ---------------------------------
     定例処理
    --------------------------------- */
-if( IS_PROC_REGULAR ){
+if (IS_PROC_REGULAR) {
     echo "定例処理を行う予定（in progress）";
-    // 最新Qiita記事の取得
+    //TODO 最新Qiita記事の取得
 } else {
 /* ---------------------------------
     随時処理
     クエリの'process'値で分岐処理
    --------------------------------- */
-    switch( strtolower($_GET['process']) ){
+    switch (strtolower($_GET['process'])) {
         case 'github':
             echo 'GitHubからのWebHook処理';
             break;
+
         case 'say-hello':
-            echo '\'say-hello\'プラグインの実行';
+            // 'Hello World!'に追加するメッセージ（タイムスタンプ）
+            $time_stamp = date("Y/m/d H:i:s");
+            $params = [
+                'say_also' => $time_stamp,
+            ];
+
+            $result_api = run_script('plugins/say-hello', $params, false);
+            $result     = decode_api_to_array($result_api);
+
+            if ($result['result']=='OK') {
+                // トゥートに必要なAPIの取得
+                $keys_api = get_api_keys('../../qithub.conf.json', 'qiitadon');
+
+                print_r($keys_api);
+            }
+
+
             break;
+
+        case 'sample':
+            $time_stamp = date("Y/m/d H:i:s");
+            $params = [
+                'command' => 'save',
+                'id'      => 'sample',
+                'value'   => $time_stamp,
+            ];
+
+            $result_api = run_script('system/data-io', $params, false);
+            $result     = decode_api_to_array($result_api);
+
+            if ($result['result']) {
+
+                print_r($result);
+            }
+
+            break;
+
         default:
             echo 'その他の処理';
     }
@@ -74,18 +106,20 @@ die(); // END of MAIN
  * 実行に必要なパラメーターは各スクリプトのディレクトリにある README.md
  * を参照して準拠してください。
  *
- * @param  string  $script_name     実行
- * @param  json    $params          スクリプトに渡すJSONオブジェクト
+ * @param  string  $dir_name        スクリプトのディレクトリ名。
+ *                                  'system/<script name>'
+ *                                  'plugin/<script name>'
+ * @param  array   $params          スクリプトに渡す配列（パラメーター）
  * @param  boolean $run_background  trueの場合、実行結果を待たずにバック
  *                                  グラウンドで実行します
  * @return json or boolean          バックグラウンド実行の場合は
  */
-function run_script($script_name, $params, $run_background = true)
+function run_script($dir_name, $params, $run_background = true)
 {
-    $lang_type = get_lang_type('say-hello');
+    $lang_type = get_lang_type($dir_name);
     $command   = get_cli_command(
         $lang_type,
-        $script_name,
+        $dir_name,
         $params
     );
 
@@ -103,23 +137,38 @@ function run_script($script_name, $params, $run_background = true)
 }
 
 /**
- *  引数の配列をJSON+URLエンコードします
+ *  URLエンコードされたJSONを配列にデコードします
+ *
+ * @param  string  $json_enc APIからのエンコード済み出力結果
+ * @return array             デコード結果
+ * @link https://github.com/Qithub-BOT/scripts/issues/16
+ */
+function decode_api_to_array($json_enc)
+{
+    $json_raw  = urldecode($json_enc);
+    $array = json_decode($json_raw, JSON_OBJECT_AS_ARRAY);
+
+    return $array;
+}
+
+/**
+ *  配列をJSON & URLエンコードにエンコードします
  *
  *  'system'および'plugins'は、このデータ形式で入力を受け付けます。
  *
- * @param  array $lang_script スクリプトの実行言語（'php','python'）
- * @return string             エンコード結果
+ * @param  array  $array_value スクリプトの実行言語（'php','python'）
+ * @return string              エンコード結果
  * @link https://github.com/Qithub-BOT/scripts/issues/16
  */
-function array_urlencoded_json($array_value)
+function encode_array_to_api($array_value)
 {
     $array['is_mode_debug'] = IS_MODE_DEBUG;
     $array['values'] = $array_value;
 
-    $json = json_encode($array_value);
-    $json = urlencode($json);
+    $json_raw = json_encode($array_value);
+    $json_enc = urlencode($json_raw);
 
-    return "${json}";
+    return $json_enc;
 }
 
 /* ---------------------------------
@@ -132,15 +181,16 @@ function array_urlencoded_json($array_value)
  *  第１引数に渡されたディレクトリ名より "main.xxx" の拡張子を調べ、該当
  *  する言語を返します。
  *
- * @param  string $name_dir
- * @return string プログラム言語名。false の場合は引数に問題があるか定義
- *                されていない拡張子が"main.xxxx"に使われています。
+ * @param  string $dir_name  スクリプトのディレクトリ名
+ * @return string            プログラム言語名。false の場合は引数に問題
+ *                           があるか定義されていない拡張子が"main.xxxx"
+ *                           に使われています。
  */
-function get_lang_type($name_dir)
+function get_lang_type($dir_name)
 {
     global $extension_types;
 
-    $path_basic = "./${name_dir}/main";
+    $path_basic = "./${dir_name}/main";
 
     foreach ($extension_types as $lang => $ext) {
         if (file_exists($path_basic . $ext)) {
@@ -177,31 +227,46 @@ function get_api_keys($path_file_conf, $name_conf)
  * 'system'および'plugins' を CLI (Command Line Interface)で実行するため
  * の Qithub 準拠のコマンドを生成します
  *
- * @param  string $lang_script スクリプトの実行言語（'php','python'）
+ * @param  string $lang_type   スクリプトの実行言語（'php','python'）
  * @param  string $name_script CLIで実行するスクリプトのパス
  * @param  string $array_value CLIでスクリプトに渡す引数の配列データ
  * @return string              CLI用のコマンド
  * @link https://github.com/Qithub-BOT/scripts/issues/16
  */
-function get_cli_command($lang_script, $name_script, $array_value)
+function get_cli_command($lang_type, $dir_name, $array_value)
 {
-    $path_cli    = get_path_exe($lang_script);
-    $path_script = get_path_script($id_issue, $name_script);
-    $argument    = array_urlencoded_json($array_value);
+    $path_cli    = get_path_exe($lang_type);
+    $path_script = get_path_script($dir_name, $lang_type);
+    $argument    = encode_array_to_api($array_value);
     $command     = "${path_cli} ${path_script} ${argument}";
 
     return  $command;
 }
 
 
-function get_path_script($id_issue, $name_script)
+/**
+ * 'system' および 'plugins' のスクリプトの絶対パスを返します
+ *
+ * @param  string $dir_name    スクリプトのディレクトリ
+ *                             'system/<script name>'
+ *                             'plugin/<script name>'
+ * @param  string $lang_type   スクリプトの実行言語（'php','python',etc）
+ * @return string              スクリプトの絶対パス
+ */
+function get_path_script($dir_name, $lang_type)
 {
-    $path_dir_scripts = realpath('./_scripts/') . DIR_SEP . $id_issue;
-    $path_file_script = $path_dir_scripts . DIR_SEP . $name_script;
+    global $extension_types;
+
+    $ext = $extension_types[$lang_type];
+
+    $path_dir_scripts = '.' . DIR_SEP .$dir_name . DIR_SEP;
+    $path_file_script = $path_dir_scripts . 'main' . $ext;
 
     if (! file_exists($path_file_script)) {
         throw new Exception("不正なファイルパスの指定 ${path_file_script}");
         $path_file_script = "./unknown_path";
+    } else {
+        $path_file_script = realpath($path_file_script);
     }
 
     return $path_file_script;
@@ -210,18 +275,18 @@ function get_path_script($id_issue, $name_script)
 /**
  *  スクリプトを CLI で実行する際に必要なプログラム言語のパスを取得する
  *
- * @param  string $lang_script スクリプトの実行言語（'php','python'）
- * @return string              スクリプト言語のパス
+ * @param  string $lang_type スクリプトの実行言語（'php','python',etc）
+ * @return string            スクリプト言語のパス
  */
-function get_path_exe($lang_script)
+function get_path_exe($lang_type)
 {
-    $lang_script = strtolower($lang_script);
-    switch ($lang_script) {
+    $lang_type = strtolower($lang_type);
+    switch ($lang_type) {
         case 'php':
             $path_cli = '/usr/bin/php'; // PHP7 .0.22 cli
             break;
         default:
-            throw new Exception("不明なプログラム言語の指定 ${lang_script}");
+            throw new Exception("不明なプログラム言語の指定 ${lang_type}");
             $path_cli = null;
             break;
     }
