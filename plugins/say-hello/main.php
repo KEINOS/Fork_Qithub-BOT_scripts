@@ -1,32 +1,53 @@
 <?php
 /**
- * KISS から始まるストーリー PHP編
+ * "Hello World!" を返すだけのスクリプト
  *
- * "Hello World! 時刻" をトゥート＆前回トゥートを削除するだけのスクリプト
+ * 【このスクリプトの Qithub API パラメーター】
  *
- * 詳しくは同階層の README.md を参照
+ * ■受け取り必須項目
+ *     'say_also' => string "Hello World!"に付加する文字列。
+ *
+ * ■出力項目
+ *     'result' => string 出力結果
  *
  */
 
 /* =====================================================================
     Main
-   ================================================================== */
+   ===================================================================== */
 
 // UTF-8, TIMEZONEを日本仕様に設定
 set_utf8_ja('Asia/Tokyo');
 
+// 標準入力を取得
+$arg = get_api_input_as_array();
 
-// 引数のデコードとAPIキー（アクセストークンなど）を取得
-//$arg = json_decode(get_api_input_as_json(), JSON_OBJECT_AS_ARRAY);
+// 付加メッセージの取得
+$msg_additional = $arg['say_also'];
 
-// 鸚鵡返し
-echo get_api_input_as_json();
+// メッセージの作成（RAW）
+$msg_raw = trim("Hello World! ${msg_additional}");
+
+// API準拠の出力結果作成
+$msg_api = [
+    'result' => 'OK',
+    'value'  => $msg_raw
+];
+$msg_enc = json_encode($msg_api);
+$msg_enc = urlencode($msg_enc);
+
+// プラグインの処理結果を出力
+echo $msg_enc;
 
 die();
 
 /* ---------------------------------------------------------------------
     Getter Functions
    ------------------------------------------------------------------ */
+function get_api_input_as_array()
+{
+    return json_decode( get_api_input_as_json(), JSON_OBJECT_AS_ARRAY);
+}
 
 function get_api_input_as_json()
 {
@@ -36,15 +57,15 @@ function get_api_input_as_json()
 function get_stdin_first_arg()
 {
     // CLIからの標準入力を取得
-    $arg = $argv;
+    global $argv;
 
     // 引数１は必須
-    if (empty($arg[1])) {
-        print_r($arg);
+    if (empty($argv[1])) {
+        print_r($argv);
         die("Argument is empty.");
     }
 
-    return trim($arg[1]);
+    return trim($argv[1]);
 }
 
 /* ---------------------------------------------------------------------
