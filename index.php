@@ -65,8 +65,15 @@ if (IS_PROC_REGULAR) {
             if ($result['result']=='OK') {
                 // トゥートに必要なAPIの取得
                 $keys_api = get_api_keys('../../qithub.conf.json', 'qiitadon');
+                $params = [
+                    'status'       => $result['value'],
+                    'domain'       => $keys_api['domain'],
+                    'access_token' => $keys_api['access_token'],
+                    'visibility'   => 'unlisted',
+                ];
+                $result_api = run_script('system/post-toot', $params, false);
 
-                print_r($keys_api);
+                print_r(decode_api_to_array($result_api));
             }
 
 
@@ -74,10 +81,14 @@ if (IS_PROC_REGULAR) {
 
         case 'sample':
             $time_stamp = date("Y/m/d H:i:s");
+            $sample = [
+                'time_stamp'=>$time_stamp,
+                'hoge'=>'hoge',
+            ];
             $params = [
-                'command' => 'save',
+                'command' => 'load',
                 'id'      => 'sample',
-                'value'   => $time_stamp,
+                'value'   => $sample,
             ];
 
             $result_api = run_script('system/data-io', $params, false);
