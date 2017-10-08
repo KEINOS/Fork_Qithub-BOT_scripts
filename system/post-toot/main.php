@@ -34,7 +34,7 @@ $arg = get_api_input_as_array();
 
 // 必須項目を満たしていた場合の処理
 if (is_requirement_complied($arg)) {
-    $toot_msg  = '#test #newapi #qithub_dev\n' . $arg['status'];
+    $toot_msg  = "#test #newapi #qithub_dev\n" . $arg['status'];
     $toot_msg  = rawurlencode($toot_msg);
 
     $visibility   = $arg['visibility'];
