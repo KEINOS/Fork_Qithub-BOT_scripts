@@ -81,7 +81,7 @@ if (IS_PROC_REGULAR) {
                 $result_api       = run_script('system/delete-toot', $params, false);
                 $result           = decode_api_to_array($result_api);
                 $is_toot_deleted  = ( $result['result'] == 'OK' ) ?: false;
-                $msg_toot_deleted = ( $is_toot_deleted ) ? "Toot has been deleted.\n" : "Error deleting toot.\n";
+                $msg_toot_deleted = ( $is_toot_deleted ) ? "Last toot has been deleted.\n" : "Error deleting toot.\n";
             }
 
             // トゥートメッセージの作成
