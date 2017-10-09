@@ -146,9 +146,15 @@ if (IS_PROC_REGULAR) {
             break;
 
         case 'get-qiita-new-items':
+            
+            if(isset($_GET['max_items'])){
+                $max_items = (int) $_GET['max_items'];
+            }else{
+                $max_items = 5;
+            }
 
             $params = [
-                'max_items' => '2',
+                'max_items' => $max_items,
             ];
 
             $result_api = run_script('system/get-qiita-new-items', $params, false);
