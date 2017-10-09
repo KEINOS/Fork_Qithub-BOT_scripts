@@ -53,10 +53,12 @@ if (IS_PROC_REGULAR) {
             break;
 
         case 'say-hello':
+            // トゥートIDの保存キー（データID）
+            $key_data = 'last-toot-id_say-hello-world';
             // 前回トゥートのIDを取得
             $params = [
                 'command' => 'load',
-                'id'      => 'say-hello-world',
+                'id'      => $key_data,
             ];
             $result_api    = run_script('system/data-io', $params, false);
             $result        = decode_api_to_array($result_api);
@@ -65,15 +67,15 @@ if (IS_PROC_REGULAR) {
 
             // トゥートメッセージの作成
             $msg_last_tootid = ($has_post_toot) ? "\nLast toot ID was: ${id_last_toot}" : '';
-            $time_stamp      = date("Y/m/d H:i:s");
+            $timestamp       = date("Y/m/d H:i:s");
+            $msg_toot        = $timestamp . $msg_last_tootid;
             $params = [
-                'say_also' => $time_stamp . $msg_last_tootid,
+                'say_also' => $msg_toot,
             ];
 
+            // トゥートの実行
             $result_api = run_script('plugins/say-hello', $params, false);
             $result     = decode_api_to_array($result_api);
-
-            // トゥートの実行
             if ($result['result'] == 'OK') {
                 // トゥートに必要なAPIの取得
                 $keys_api = get_api_keys('../../qithub.conf.json', 'qiitadon');
@@ -87,7 +89,19 @@ if (IS_PROC_REGULAR) {
                 $result     = decode_api_to_array($result_api);
                 if($result['result'] == 'OK'){
                     $id_last_toot = json_decode( $result['value'], JSON_OBJECT_AS_ARRAY)['id'];
-                    echo $id_last_toot;
+                    // 今回のトゥートIDの保存
+                    $params = [
+                        'command' => 'save',
+                        'id'      => $key_data,
+                        'value'   => $id_last_toot,
+                    ];
+                    $result_api = run_script('system/data-io', $params, false);
+                    $result     = decode_api_to_array($result_api);
+                    if($result['result'] == 'OK'){
+                        echo "Saved last toot ID as : ${id_last_toot}" . PHP_EOL;
+                        echo "Tooted msg was ${msg_toot}" . PHP_EOL;
+                    }
+                    
                 }
             }
 
