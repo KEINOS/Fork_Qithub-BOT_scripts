@@ -1,8 +1,9 @@
 <?php
 /**
- * 新規トゥートを行います
+ * トゥートの削除を行います
  *
- *
+ *  受け取ったAPIのパラメーター（'id'）より指定されたトゥートを削除
+ *  します。
  *
  * 【このスクリプトの Qithub API パラメーター】
  *
@@ -10,11 +11,9 @@
  *   必須項目
  *     'domain'       => string トゥート先のドメイン名(ホスト名のみ)
  *     'access_token' => string トゥートに必要なアクセストークン
- *     'status'       => string トゥート内容
- *     'visibility'   => string 'public','unlisted','private','direct'
+ *     'id'           => string 削除したいトゥートのID
  *   オプション項目
- *     'spoiler_text' => string この項目があると'CW'モードになり'status'
- *                              は「もっと読む」内の非表示領域になります。
+ *     なし
  *
  * ■出力項目
  *     'result' => string 'OK','NG'
@@ -34,18 +33,14 @@ $arg = get_api_input_as_array();
 
 // 必須項目を満たしていた場合の処理
 if (is_requirement_complied($arg)) {
-    $toot_msg  = "#test #newapi #qithub_dev\n" . $arg['status'];
-    $toot_msg  = rawurlencode($toot_msg);
 
-    $visibility   = $arg['visibility'];
     $access_token = $arg['access_token'];
     $domain       = $arg['domain'];
+    $id_toot      = $arg['id'];
 
-    $query  = 'curl -X POST';
-    $query .= " -d 'status=${toot_msg}'";
-    $query .= " -d 'visibility=${visibility}'";
+    $query  = 'curl -X DELETE';
     $query .= " --header 'Authorization: Bearer ${access_token}'";
-    $query .= " -sS https://${domain}/api/v1/statuses;";
+    $query .= " -sS https://${domain}/api/v1/statuses/${id_toot};";
  
     /*   
      * @todo サーバが500の場合なども'OK'を返してしまうので要改善
@@ -83,7 +78,7 @@ die();
  */
 function is_requirement_complied($arg)
 {
-    return isset($arg['domain']) && isset($arg['access_token']) && isset($arg['status']) && isset($arg['visibility']);
+    return isset($arg['domain']) && isset($arg['access_token']) && isset($arg['id']);
 }
 
 
@@ -150,9 +145,4 @@ function set_utf8_ja($timezone = 'Asia/Tokyo')
     mb_internal_encoding('UTF-8');
     mb_http_output('UTF-8');
     ob_start("mb_output_handler");
-}
-
-function dir_exists($path_dir)
-{
-    return is_dir($path_dir);
 }
