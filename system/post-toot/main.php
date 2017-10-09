@@ -18,7 +18,7 @@
  *
  * ■出力項目
  *     'result' => string 'OK','NG'
- *     'value'  => json    Mastodonからのレスポンスをそのまま返す
+ *     'value'  => json    MastodonからのレスポンスをJSONのまま返します。
  *
  */
 
@@ -46,7 +46,10 @@ if (is_requirement_complied($arg)) {
     $query .= " -d 'visibility=${visibility}'";
     $query .= " --header 'Authorization: Bearer ${access_token}'";
     $query .= " -sS https://${domain}/api/v1/statuses;";
-    
+ 
+    /*   
+     * @todo サーバが500の場合なども'OK'を返してしまうので要改善
+     */
     $result = 'OK';
     $result_value = `$query`;
 
@@ -71,6 +74,7 @@ die();
 /* ---------------------------------------------------------------------
     Functions
    --------------------------------------------------------------------- */
+
 /**
  *  トゥートに最低限必要な項目を網羅しているかチェックします
  *
