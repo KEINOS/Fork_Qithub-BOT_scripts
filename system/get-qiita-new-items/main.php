@@ -1,10 +1,38 @@
 <?php
+/**
+ * 新着 Qiita 記事を取得します
+ *
+ *
+ * 【このスクリプトの Qithub API パラメーター】
+ *
+ * ■受け取り必須項目
+ *     なし
+ *
+ * ■出力項目
+ *     'max_items' => integer Qiitaから取得する件数。（最大20件）
+ *
+ * @todo：前回取得の差分のみを返す
+ */
+
+/* =====================================================================
+    Main
+   ===================================================================== */
 
 // 日本語環境＆タイムゾーンを東京に設定
 set_utf8_ja();
 
+// 標準入力を取得
+$arg = get_api_input_as_array();
+
+// 新着記事の取得件数
+if( isset($arg['max_items']) && $arg['max_items'] <= 20 ){
+    $max_items = (int) $arg['max_items'];
+} else {
+    $max_items = 10;
+}
+
 // Qiita API の URL
-$url_qiita_new_items = 'https://qiita.com/api/v2/items?page=1&per_page=10';
+$url_qiita_new_items = "https://qiita.com/api/v2/items?page=1&per_page=${max_items}";
 
 // User Agent 設定
 $ctx = stream_context_create([
