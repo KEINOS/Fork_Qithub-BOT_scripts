@@ -55,30 +55,48 @@ if (IS_PROC_REGULAR) {
         case 'say-hello':
             // トゥートIDの保存キー（データID）
             $key_data = 'last-toot-id_say-hello-world';
+
             // 前回トゥートのIDを取得
             $params = [
                 'command' => 'load',
                 'id'      => $key_data,
             ];
-            $result_api    = run_script('system/data-io', $params, false);
-            $result        = decode_api_to_array($result_api);
-            $has_post_toot = ( $result['result'] == 'OK' ) ?: false;
-            $id_last_toot  = ( $has_post_toot ) ? $result['value'] : '';
+            $result_api   = run_script('system/data-io', $params, false);
+            $result       = decode_api_to_array($result_api);
+            $has_pre_toot = ( $result['result'] == 'OK' ) ?: false;
+            $id_last_toot = ( $has_pre_toot ) ? $result['value'] : '';
+
+            // トゥートに必要なAPIの取得
+            $keys_api = get_api_keys('../../qithub.conf.json', 'qiitadon');
+
+            // 前回トゥートを削除
+            $msg_toot_deleted = '';
+            $is_toot_deleted  = false;
+            if ($has_pre_toot) {
+                $params = [
+                    'domain'       => $keys_api['domain'],
+                    'access_token' => $keys_api['access_token'],
+                    'id'           => $id_last_toot,
+                ];
+                $result_api       = run_script('system/delete-toot', $params, false);
+                $result           = decode_api_to_array($result_api);
+                $is_toot_deleted  = ( $result['result'] == 'OK' ) ?: false;
+                $msg_toot_deleted = ( $is_toot_deleted ) ? "Toot has been deleted.\n" : "Error deleting toot.\n";
+            }
 
             // トゥートメッセージの作成
-            $msg_last_tootid = ($has_post_toot) ? "\nLast toot ID was: ${id_last_toot}" : '';
+            $msg_last_tootid = ( $has_pre_toot    ) ? "Last toot ID was: ${id_last_toot}\n" : '';
             $timestamp       = date("Y/m/d H:i:s");
-            $msg_toot        = $timestamp . $msg_last_tootid;
+            $msg_toot        = "\n" . "Tooted at: ${timestamp}";
+            $msg_toot       .= "\n" . $msg_last_tootid . $msg_toot_deleted;
             $params = [
                 'say_also' => $msg_toot,
             ];
-
-            // トゥートの実行
             $result_api = run_script('plugins/say-hello', $params, false);
             $result     = decode_api_to_array($result_api);
+
+            // トゥートの実行
             if ($result['result'] == 'OK') {
-                // トゥートに必要なAPIの取得
-                $keys_api = get_api_keys('../../qithub.conf.json', 'qiitadon');
                 $params = [
                     'status'       => $result['value'],
                     'domain'       => $keys_api['domain'],
@@ -87,8 +105,8 @@ if (IS_PROC_REGULAR) {
                 ];
                 $result_api = run_script('system/post-toot', $params, false);
                 $result     = decode_api_to_array($result_api);
-                if($result['result'] == 'OK'){
-                    $id_last_toot = json_decode( $result['value'], JSON_OBJECT_AS_ARRAY)['id'];
+                if ($result['result'] == 'OK') {
+                    $id_last_toot = json_decode($result['value'], JSON_OBJECT_AS_ARRAY)['id'];
                     // 今回のトゥートIDの保存
                     $params = [
                         'command' => 'save',
@@ -97,11 +115,10 @@ if (IS_PROC_REGULAR) {
                     ];
                     $result_api = run_script('system/data-io', $params, false);
                     $result     = decode_api_to_array($result_api);
-                    if($result['result'] == 'OK'){
+                    if ($result['result'] == 'OK') {
                         echo "Saved last toot ID as : ${id_last_toot}" . PHP_EOL;
                         echo "Tooted msg was ${msg_toot}" . PHP_EOL;
                     }
-                    
                 }
             }
 
