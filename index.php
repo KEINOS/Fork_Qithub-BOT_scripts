@@ -52,6 +52,27 @@ if (IS_PROC_REGULAR) {
             echo 'GitHubからのWebHook処理';
             break;
 
+        case 'sample':
+            $time_stamp = date("Y/m/d H:i:s");
+            $sample = [
+                'time_stamp'=>$time_stamp,
+                'hoge'=>'hoge',
+            ];
+            $params = [
+                'command' => 'load',
+                'id'      => 'sample',
+                'value'   => $sample,
+            ];
+
+            $result_api = run_script('system/data-io', $params, false);
+            $result     = decode_api_to_array($result_api);
+
+            if ($result['result']) {
+                print_r($result);
+            }
+
+            break;
+
         case 'say-hello-world':
             // トゥートIDの保存キー（データID）
             $key_data = 'last-toot-id_say-hello-world';
@@ -122,22 +143,21 @@ if (IS_PROC_REGULAR) {
                 }
             }
 
-
             break;
 
-        case 'sample':
-            $time_stamp = date("Y/m/d H:i:s");
-            $sample = [
-                'time_stamp'=>$time_stamp,
-                'hoge'=>'hoge',
-            ];
+        case 'get-qiita-new-items':
+            
+            if(isset($_GET['max_items'])){
+                $max_items = (int) $_GET['max_items'];
+            }else{
+                $max_items = 5;
+            }
+
             $params = [
-                'command' => 'load',
-                'id'      => 'sample',
-                'value'   => $sample,
+                'max_items' => $max_items,
             ];
 
-            $result_api = run_script('system/data-io', $params, false);
+            $result_api = run_script('system/get-qiita-new-items', $params, false);
             $result     = decode_api_to_array($result_api);
 
             if ($result['result']) {
@@ -145,6 +165,9 @@ if (IS_PROC_REGULAR) {
             }
 
             break;
+
+
+
 
         default:
             echo 'その他の処理';
