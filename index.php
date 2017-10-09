@@ -53,16 +53,28 @@ if (IS_PROC_REGULAR) {
             break;
 
         case 'say-hello':
-            // 'Hello World!'に追加するメッセージ（タイムスタンプ）
-            $time_stamp = date("Y/m/d H:i:s");
+            // 前回トゥートのIDを取得
             $params = [
-                'say_also' => $time_stamp,
+                'command' => 'load',
+                'id'      => 'say-hello-world',
+            ];
+            $result_api    = run_script('system/data-io', $params, false);
+            $result        = decode_api_to_array($result_api);
+            $has_post_toot = ( $result['result'] == 'OK' ) ?: false;
+            $id_last_toot  = ( $has_post_toot ) ? $result['value'] : '';
+
+            // トゥートメッセージの作成
+            $msg_last_tootid = ($has_post_toot) ? "\nLast toot ID was: ${id_last_toot}" : '';
+            $time_stamp      = date("Y/m/d H:i:s");
+            $params = [
+                'say_also' => $time_stamp . $msg_last_tootid,
             ];
 
             $result_api = run_script('plugins/say-hello', $params, false);
             $result     = decode_api_to_array($result_api);
 
-            if ($result['result']=='OK') {
+            // トゥートの実行
+            if ($result['result'] == 'OK') {
                 // トゥートに必要なAPIの取得
                 $keys_api = get_api_keys('../../qithub.conf.json', 'qiitadon');
                 $params = [
@@ -72,8 +84,11 @@ if (IS_PROC_REGULAR) {
                     'visibility'   => 'unlisted',
                 ];
                 $result_api = run_script('system/post-toot', $params, false);
-
-                print_r(decode_api_to_array($result_api));
+                $result     = decode_api_to_array($result_api);
+                if($result['result'] == 'OK'){
+                    $id_last_toot = json_decode( $result['value'], JSON_OBJECT_AS_ARRAY)['id'];
+                    echo $id_last_toot;
+                }
             }
 
 
@@ -95,7 +110,6 @@ if (IS_PROC_REGULAR) {
             $result     = decode_api_to_array($result_api);
 
             if ($result['result']) {
-
                 print_r($result);
             }
 
@@ -157,7 +171,7 @@ function run_script($dir_name, $params, $run_background = true)
 function decode_api_to_array($json_enc)
 {
     $json_raw  = urldecode($json_enc);
-    $array = json_decode($json_raw, JSON_OBJECT_AS_ARRAY);
+    $array     = json_decode($json_raw, JSON_OBJECT_AS_ARRAY);
 
     return $array;
 }
@@ -174,7 +188,7 @@ function decode_api_to_array($json_enc)
 function encode_array_to_api($array_value)
 {
     $array['is_mode_debug'] = IS_MODE_DEBUG;
-    $array['values'] = $array_value;
+    $array['values']        = $array_value;
 
     $json_raw = json_encode($array_value);
     $json_enc = urlencode($json_raw);
