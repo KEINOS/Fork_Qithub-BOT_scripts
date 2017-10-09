@@ -52,7 +52,7 @@ if (IS_PROC_REGULAR) {
             echo 'GitHubからのWebHook処理';
             break;
 
-        case 'say-hello':
+        case 'say-hello-world':
             // トゥートIDの保存キー（データID）
             $key_data = 'last-toot-id_say-hello-world';
 
@@ -92,7 +92,7 @@ if (IS_PROC_REGULAR) {
             $params = [
                 'say_also' => $msg_toot,
             ];
-            $result_api = run_script('plugins/say-hello', $params, false);
+            $result_api = run_script('plugins/say-hello-world', $params, false);
             $result     = decode_api_to_array($result_api);
 
             // トゥートの実行

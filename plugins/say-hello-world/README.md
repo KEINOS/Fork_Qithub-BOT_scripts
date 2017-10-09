@@ -1,4 +1,4 @@
-# plugins/say-hello
+# plugins/say-hello-world
 
  'Hello World!'を返すだけのスクリプト
 
@@ -9,7 +9,7 @@
 
 | プログラム言語 | 呼び出しスクリプト名 | 関連issue番号 |
 | --- | --- | :---: |
-| PHP | plugins/say-hello | [issue #10](https://github.com/Qithub-BOT/scripts/issues/10) |
+| PHP | plugins/say-hello-world | [issue #10](https://github.com/Qithub-BOT/scripts/issues/10) |
 
 ## 動作実績
 
