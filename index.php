@@ -424,6 +424,33 @@ function get_path_exe($lang_type)
 }
 
 /* ---------------------------------
+    DATA I/O Functions
+    'system/data-io'のQithub API ラッパー
+   --------------------------------- */
+/**
+ *  データの読み込みをします
+ *
+ * @param  string  $id_data 保存したデータのキー
+ * @return mixed            保存したデータ
+ */
+ function data_load($id_data)
+ {
+    $params   = [
+        'command' => 'load',
+        'id'      => $id_data,
+    ];
+    $result_api = run_script('system/data-io', $params, false);
+    $result     = decode_api_to_array($result_api);
+    if ($result['result'] == 'OK') {
+        return $result['value'];
+    } else {
+        throw new Exception("不正なデータIDです： ${id_data}");
+        return false;
+    }     
+ }
+
+
+/* ---------------------------------
     環境／その他 Functions
    --------------------------------- */
 /**
