@@ -91,7 +91,7 @@ if (IS_PROC_REGULAR) {
                 $result     = decode_api_to_array($result_api);
                 if ($result['result'] == 'OK') {
                     echo "Data saved." . PHP_EOL;
-                    echo "Data ID/key was: ${key_data}/${timestamp}" . PHP_EOL;
+                    echo "Data ID/key was: ${id_data}/${timestamp}" . PHP_EOL;
                 }
             }
 
@@ -138,7 +138,7 @@ if (IS_PROC_REGULAR) {
             }
 
             // トゥートメッセージの作成
-            $msg_last_tootid = ( $has_pre_toot    ) ? "Last toot ID was: ${id_last_toot}\n" : '';
+            $msg_last_tootid = ( $has_pre_toot ) ? "Last toot ID was: ${id_pre_toot}\n" : '';
             $timestamp       = date("Y/m/d H:i:s");
             $msg_toot        = "\n" . "Tooted at: ${timestamp}";
             $msg_toot       .= "\n" . $msg_last_tootid . $msg_toot_deleted;
@@ -169,7 +169,7 @@ if (IS_PROC_REGULAR) {
                     $result_api = run_script('system/data-io', $params, false);
                     $result     = decode_api_to_array($result_api);
                     if ($result['result'] == 'OK') {
-                        echo "Saved last toot ID as : ${id_last_toot}" . PHP_EOL;
+                        echo "Saved last toot ID as : ${id_pre_toot}" . PHP_EOL;
                         echo "Tooted msg was ${msg_toot}" . PHP_EOL;
                     }
                 }
