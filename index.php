@@ -80,8 +80,14 @@ if (IS_PROC_REGULAR) {
             } else {
                 // GitHub からの POST データ（WebHook 内容）の追加保存
                 $timestamp = date("Ymd-His");
-                $data_logs[$timestamp]['post'] = $_POST;
-                $data_logs[$timestamp]['get']  = $_GET;
+                $data_logs[$timestamp] = [
+                    'getallheaders' => getallheaders(),
+                    'get'           => $_GET,
+                    'post'          => $_POST,
+                    'ip'            => $_SERVER["REMOTE_ADDR"],
+                    'host'          => gethostbyaddr( $_SERVER["REMOTE_ADDR"] ),
+                    'raw_post_data' => $HTTP_RAW_POST_DATA,
+                ];
                 $params = [
                     'command' => 'save',
                     'id'      => $key_data,
