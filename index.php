@@ -49,7 +49,9 @@ if (IS_PROC_REGULAR) {
    --------------------------------- */
     switch (strtolower($_GET['process'])) {
         case 'github':
-            echo 'GitHubからのWebHook処理';
+            // GitHubからのWebHook処理
+            
+            
             break;
 
         case 'sample':
