@@ -51,26 +51,26 @@ if (IS_PROC_REGULAR) {
         // GitHub からの WebHook 処理
         case 'github':
             // WebHook からのデータ保存キー（データID）
-            $key_data  = 'WebHook-GitHub';
+            $id_data = 'WebHook-GitHub';
 
             // 保存済みデータの読み込み
-            $data_logs = array();
-            $params = [
+            $log_data = array();
+            $params   = [
                 'command' => 'load',
-                'id'      => $key_data,
+                'id'      => $id_data,
             ];
             $result_api = run_script('system/data-io', $params, false);
-            $result  = decode_api_to_array($result_api);
-            if( $result['result'] == 'OK' ){
-                $data_logs = $result['value'];
+            $result     = decode_api_to_array($result_api);
+            if ($result['result'] == 'OK') {
+                $log_data = $result['value'];
             }
 
             // ログ表示（WebHook からのデータの保存内容の確認）
             if (isset($_GET['method'])) {
-                switch($_GET['method']){
+                switch ($_GET['method']) {
                     default:
-                        echo '<pre>' . PHP_EOL;
-                        print_r($data_logs);
+                        echo '<pre style=\'width:100%;overflow: auto;white-space: pre-wrap; word-wrap: break-word;\'>' . PHP_EOL;
+                        print_r($log_data);
                         echo '</pre>' . PHP_EOL;
                         break;
                 }
@@ -80,18 +80,18 @@ if (IS_PROC_REGULAR) {
             } else {
                 // GitHub からの POST データ（WebHook 内容）の追加保存
                 $timestamp = date("Ymd-His");
-                $data_logs[$timestamp] = [
+                $log_data[$timestamp] = [
                     'getallheaders' => getallheaders(),
                     'get'           => $_GET,
                     'post'          => $_POST,
                     'ip'            => $_SERVER["REMOTE_ADDR"],
-                    'host'          => gethostbyaddr( $_SERVER["REMOTE_ADDR"] ),
+                    'host'          => gethostbyaddr($_SERVER["REMOTE_ADDR"]),
                     'raw_post_data' => $HTTP_RAW_POST_DATA,
                 ];
                 $params = [
                     'command' => 'save',
-                    'id'      => $key_data,
-                    'value'   => $data_logs,
+                    'id'      => $id_data,
+                    'value'   => $log_data,
                 ];
                 $result_api = run_script('system/data-io', $params, false);
                 $result     = decode_api_to_array($result_api);
@@ -99,19 +99,17 @@ if (IS_PROC_REGULAR) {
                     echo "Data saved." . PHP_EOL;
                     echo "Data ID/key was: ${key_data}/${timestamp}" . PHP_EOL;
                 }
-
-                                
             }
 
             break;
 
         case 'sample':
-            $time_stamp = date("Y/m/d H:i:s");
-            $sample = [
-                'time_stamp'=>$time_stamp,
-                'hoge'=>'hoge',
+            $timestamp = date("Y/m/d H:i:s");
+            $sample    = [
+                'time_stamp' => $timestamp,
+                'hoge'       => 'hoge',
             ];
-            $params = [
+            $params    = [
                 'command' => 'load',
                 'id'      => 'sample',
                 'value'   => $sample,
@@ -128,12 +126,12 @@ if (IS_PROC_REGULAR) {
 
         case 'say-hello-world':
             // トゥートIDの保存キー（データID）
-            $key_data = 'last-toot-id_say-hello-world';
+            $id_data = 'last-toot-id_say-hello-world';
 
             // 前回トゥートのIDを取得
             $params = [
                 'command' => 'load',
-                'id'      => $key_data,
+                'id'      => $id_data,
             ];
             $result_api   = run_script('system/data-io', $params, false);
             $result       = decode_api_to_array($result_api);
@@ -184,7 +182,7 @@ if (IS_PROC_REGULAR) {
                     // 今回のトゥートIDの保存
                     $params = [
                         'command' => 'save',
-                        'id'      => $key_data,
+                        'id'      => $id_data,
                         'value'   => $id_last_toot,
                     ];
                     $result_api = run_script('system/data-io', $params, false);
