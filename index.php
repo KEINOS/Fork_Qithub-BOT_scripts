@@ -86,7 +86,7 @@ if (IS_PROC_REGULAR) {
                     'post'          => $_POST,
                     'ip'            => $_SERVER["REMOTE_ADDR"],
                     'host'          => gethostbyaddr($_SERVER["REMOTE_ADDR"]),
-                    'raw_post_data' => $HTTP_RAW_POST_DATA,
+                    'raw_post_data' => file_get_contents( 'php://input' ),
                 ];
                 $params = [
                     'command' => 'save',
