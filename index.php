@@ -48,10 +48,55 @@ if (IS_PROC_REGULAR) {
     クエリの'process'値で分岐処理
    --------------------------------- */
     switch (strtolower($_GET['process'])) {
+        // GitHub からの WebHook 処理
         case 'github':
-            // GitHubからのWebHook処理
-            
-            
+            // WebHook からのデータ保存キー（データID）
+            $key_data  = 'WebHook-GitHub';
+
+            // 保存済みデータの読み込み
+            $data_logs = array();
+            $params = [
+                'command' => 'load',
+                'id'      => $key_data,
+            ];
+            $result_api = run_script('system/data-io', $params, false);
+            $result  = decode_api_to_array($result_api);
+            if( $result['result'] == 'OK' ){
+                $data_logs = $result['value'];
+            }
+
+            // ログ表示（WebHook からのデータの保存内容の確認）
+            if (isset($_GET['method'])) {
+                switch($_GET['method']){
+                    default:
+                        echo '<pre>' . PHP_EOL;
+                        print_r($data_logs);
+                        echo '</pre>' . PHP_EOL;
+                        break;
+                }
+                die();
+
+            // WebHook からのデータの保存
+            } else {
+                // GitHub からの POST データ（WebHook 内容）の追加保存
+                $timestamp = date("Ymd-His");
+                $data_logs[$timestamp]['post'] = $_POST;
+                $data_logs[$timestamp]['get']  = $_GET;
+                $params = [
+                    'command' => 'save',
+                    'id'      => $key_data,
+                    'value'   => $data_logs,
+                ];
+                $result_api = run_script('system/data-io', $params, false);
+                $result     = decode_api_to_array($result_api);
+                if ($result['result'] == 'OK') {
+                    echo "Data saved." . PHP_EOL;
+                    echo "Data ID/key was: ${key_data}/${timestamp}" . PHP_EOL;
+                }
+
+                                
+            }
+
             break;
 
         case 'sample':
@@ -148,10 +193,9 @@ if (IS_PROC_REGULAR) {
             break;
 
         case 'get-qiita-new-items':
-            
-            if(isset($_GET['max_items'])){
+            if (isset($_GET['max_items'])) {
                 $max_items = (int) $_GET['max_items'];
-            }else{
+            } else {
                 $max_items = 5;
             }
 
