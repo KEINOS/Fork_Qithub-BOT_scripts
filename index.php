@@ -54,15 +54,9 @@ if (IS_PROC_REGULAR) {
             $id_data = 'WebHook-GitHub';
 
             // 保存済みデータの読み込み
-            $log_data = array();
-            $params   = [
-                'command' => 'load',
-                'id'      => $id_data,
-            ];
-            $result_api = run_script('system/data-io', $params, false);
-            $result     = decode_api_to_array($result_api);
-            if ($result['result'] == 'OK') {
-                $log_data = $result['value'];
+            $log_data = data_load($id_data);
+            if ($log_data === false) {
+                $log_data = array();
             }
 
             // ログ表示（WebHook からのデータの保存内容の確認）
@@ -104,24 +98,17 @@ if (IS_PROC_REGULAR) {
             break;
 
         case 'sample':
+            // 保存？
             $timestamp = date("Y/m/d H:i:s");
             $sample    = [
                 'time_stamp' => $timestamp,
                 'hoge'       => 'hoge',
             ];
-            $params    = [
-                'command' => 'load',
-                'id'      => 'sample',
-                'value'   => $sample,
-            ];
-
-            $result_api = run_script('system/data-io', $params, false);
-            $result     = decode_api_to_array($result_api);
-
-            if ($result['result']) {
-                print_r($result);
-            }
-
+            
+            // 読み込み
+            $id_data = 'sample';
+            $result  = data_load($id_data);
+            print_r($result);
             break;
 
         case 'say-hello-world':
@@ -129,14 +116,8 @@ if (IS_PROC_REGULAR) {
             $id_data = 'last-toot-id_say-hello-world';
 
             // 前回トゥートのIDを取得
-            $params = [
-                'command' => 'load',
-                'id'      => $id_data,
-            ];
-            $result_api   = run_script('system/data-io', $params, false);
-            $result       = decode_api_to_array($result_api);
-            $has_pre_toot = ( $result['result'] == 'OK' ) ?: false;
-            $id_last_toot = ( $has_pre_toot ) ? $result['value'] : '';
+            $id_pre_toot  = data_load($id_data);
+            $has_pre_toot = ($id_pre_toot !== false);
 
             // トゥートに必要なAPIの取得
             $keys_api = get_api_keys('../../qithub.conf.json', 'qiitadon');
@@ -148,7 +129,7 @@ if (IS_PROC_REGULAR) {
                 $params = [
                     'domain'       => $keys_api['domain'],
                     'access_token' => $keys_api['access_token'],
-                    'id'           => $id_last_toot,
+                    'id'           => $id_pre_toot,
                 ];
                 $result_api       = run_script('system/delete-toot', $params, false);
                 $result           = decode_api_to_array($result_api);
@@ -178,12 +159,12 @@ if (IS_PROC_REGULAR) {
                 $result_api = run_script('system/post-toot', $params, false);
                 $result     = decode_api_to_array($result_api);
                 if ($result['result'] == 'OK') {
-                    $id_last_toot = json_decode($result['value'], JSON_OBJECT_AS_ARRAY)['id'];
+                    $id_pre_toot = json_decode($result['value'], JSON_OBJECT_AS_ARRAY)['id'];
                     // 今回のトゥートIDの保存
                     $params = [
                         'command' => 'save',
                         'id'      => $id_data,
-                        'value'   => $id_last_toot,
+                        'value'   => $id_pre_toot,
                     ];
                     $result_api = run_script('system/data-io', $params, false);
                     $result     = decode_api_to_array($result_api);
