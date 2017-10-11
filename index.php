@@ -59,18 +59,21 @@ if (IS_PROC_REGULAR) {
                 $log_data = array();
             }
 
-            // ログ表示（WebHook からのデータの保存内容の確認）
+            // ログの操作（view, delete）
             if (isset($_GET['method'])) {
                 switch ($_GET['method']) {
-                    default:
+                    // ログ表示（WebHook からのデータの保存内容の確認）
+                    case 'view':
                         echo '<pre style=\'width:100%;overflow: auto;white-space: pre-wrap; word-wrap: break-word;\'>' . PHP_EOL;
                         print_r($log_data);
                         echo '</pre>' . PHP_EOL;
                         break;
+                    default:
+                        break;
                 }
                 die();
 
-            // WebHook からのデータの保存
+            // ログ（WebHook からのデータ）の保存
             } else {
                 // GitHub からの POST データ（WebHook 内容）の追加保存
                 $timestamp = date("Ymd-His");
