@@ -82,14 +82,8 @@ if (IS_PROC_REGULAR) {
                     'host'          => gethostbyaddr($_SERVER["REMOTE_ADDR"]),
                     'raw_post_data' => file_get_contents( 'php://input' ),
                 ];
-                $params = [
-                    'command' => 'save',
-                    'id'      => $id_data,
-                    'value'   => $log_data,
-                ];
-                $result_api = run_script('system/data-io', $params, false);
-                $result     = decode_api_to_array($result_api);
-                if ($result['result'] == 'OK') {
+                $result = save_data($id_data,$log_data);
+                if ($result==true) {
                     echo "Data saved." . PHP_EOL;
                     echo "Data ID/key was: ${id_data}/${timestamp}" . PHP_EOL;
                 }
@@ -161,14 +155,8 @@ if (IS_PROC_REGULAR) {
                 if ($result['result'] == 'OK') {
                     $id_pre_toot = json_decode($result['value'], JSON_OBJECT_AS_ARRAY)['id'];
                     // 今回のトゥートIDの保存
-                    $params = [
-                        'command' => 'save',
-                        'id'      => $id_data,
-                        'value'   => $id_pre_toot,
-                    ];
-                    $result_api = run_script('system/data-io', $params, false);
-                    $result     = decode_api_to_array($result_api);
-                    if ($result['result'] == 'OK') {
+                    $result = save_data($id_data, $id_pre_toot);
+                    if ($result['result'] == true) {
                         echo "Saved last toot ID as : ${id_pre_toot}" . PHP_EOL;
                         echo "Tooted msg was ${msg_toot}" . PHP_EOL;
                     }
@@ -414,8 +402,8 @@ function get_path_exe($lang_type)
  * @param  string  $id_data 保存したデータのキー
  * @return mixed            保存したデータ
  */
- function load_data($id_data)
- {
+function load_data($id_data)
+{
     $params   = [
         'command' => 'load',
         'id'      => $id_data,
@@ -428,7 +416,7 @@ function get_path_exe($lang_type)
         throw new Exception("不正なデータIDです： ${id_data}");
         return false;
     }     
- }
+}
 
 /**
  *  データの書き込みをします
@@ -437,8 +425,8 @@ function get_path_exe($lang_type)
  * @param  mixed   $data    保存したいデータ
  * @return boolean          データの保存成功は true、失敗は false
  */
- function save_data($id_data,$data)
- {
+function save_data($id_data,$data)
+{
     $params = [
         'command' => 'save',
         'id'      => $id_data,
@@ -446,9 +434,9 @@ function get_path_exe($lang_type)
     ];
     $result_api = run_script('system/data-io', $params, false);
     $result     = decode_api_to_array($result_api);
-
+    
     return  ($result['result'] == 'OK');
- }
+}
 
 
 /* ---------------------------------
