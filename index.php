@@ -54,7 +54,7 @@ if (IS_PROC_REGULAR) {
             $id_data = 'WebHook-GitHub';
 
             // 保存済みデータの読み込み
-            $log_data = data_load($id_data);
+            $log_data = load_data($id_data);
             if ($log_data === false) {
                 $log_data = array();
             }
@@ -107,7 +107,7 @@ if (IS_PROC_REGULAR) {
             
             // 読み込み
             $id_data = 'sample';
-            $result  = data_load($id_data);
+            $result  = load_data($id_data);
             print_r($result);
             break;
 
@@ -116,7 +116,7 @@ if (IS_PROC_REGULAR) {
             $id_data = 'last-toot-id_say-hello-world';
 
             // 前回トゥートのIDを取得
-            $id_pre_toot  = data_load($id_data);
+            $id_pre_toot  = load_data($id_data);
             $has_pre_toot = ($id_pre_toot !== false);
 
             // トゥートに必要なAPIの取得
@@ -414,7 +414,7 @@ function get_path_exe($lang_type)
  * @param  string  $id_data 保存したデータのキー
  * @return mixed            保存したデータ
  */
- function data_load($id_data)
+ function load_data($id_data)
  {
     $params   = [
         'command' => 'load',
