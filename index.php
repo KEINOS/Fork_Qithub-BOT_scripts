@@ -80,9 +80,9 @@ if (IS_PROC_REGULAR) {
                     'post'          => $_POST,
                     'ip'            => $_SERVER["REMOTE_ADDR"],
                     'host'          => gethostbyaddr($_SERVER["REMOTE_ADDR"]),
-                    'raw_post_data' => file_get_contents( 'php://input' ),
+                    'raw_post_data' => file_get_contents('php://input'),
                 ];
-                $result = save_data($id_data,$log_data);
+                $result = save_data($id_data, $log_data);
                 if ($result==true) {
                     echo "Data saved." . PHP_EOL;
                     echo "Data ID/key was: ${id_data}/${timestamp}" . PHP_EOL;
@@ -98,7 +98,7 @@ if (IS_PROC_REGULAR) {
                 'time_stamp' => $timestamp,
                 'hoge'       => 'hoge',
             ];
-            
+
             // 読み込み
             $id_data = 'sample';
             $result  = load_data($id_data);
@@ -415,7 +415,7 @@ function load_data($id_data)
     } else {
         throw new Exception("不正なデータIDです： ${id_data}");
         return false;
-    }     
+    }
 }
 
 /**
@@ -425,7 +425,7 @@ function load_data($id_data)
  * @param  mixed   $data    保存したいデータ
  * @return boolean          データの保存成功は true、失敗は false
  */
-function save_data($id_data,$data)
+function save_data($id_data, $data)
 {
     $params = [
         'command' => 'save',
@@ -434,7 +434,7 @@ function save_data($id_data,$data)
     ];
     $result_api = run_script('system/data-io', $params, false);
     $result     = decode_api_to_array($result_api);
-    
+
     return  ($result['result'] == 'OK');
 }
 
