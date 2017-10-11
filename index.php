@@ -439,6 +439,27 @@ function save_data($id_data, $data)
     return  ($result['result'] == 'OK');
 }
 
+/**
+ *  データの削除をします
+ *
+ * @param  string  $id_data 保存したデータのキー
+ * @return boolean          削除されれば true
+ */
+function delete_data($id_data)
+{
+    $params   = [
+        'command' => 'delete',
+        'id'      => $id_data,
+    ];
+    $result_api = run_script('system/data-io', $params, false);
+    $result     = decode_api_to_array($result_api);
+    if ($result['result'] == 'OK') {
+        return $result['value'];
+    } else {
+        throw new Exception("不正なデータIDです： ${id_data}");
+        return false;
+    }
+}
 
 /* ---------------------------------
     環境／その他 Functions
