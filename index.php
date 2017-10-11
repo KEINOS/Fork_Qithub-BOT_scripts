@@ -205,12 +205,13 @@ die(); // END of MAIN
  * を参照して準拠してください。
  *
  * @param  string  $dir_name        スクリプトのディレクトリ名。
+ *                                  エンドポイント名。
  *                                  'system/<script name>'
  *                                  'plugin/<script name>'
  * @param  array   $params          スクリプトに渡す配列（パラメーター）
  * @param  boolean $run_background  trueの場合、実行結果を待たずにバック
  *                                  グラウンドで実行します
- * @return json or boolean          バックグラウンド実行の場合は
+ * @return json or boolean          バックグラウンド実行の場合は常にtrue
  */
 function run_script($dir_name, $params, $run_background = true)
 {
