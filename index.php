@@ -430,6 +430,26 @@ function get_path_exe($lang_type)
     }     
  }
 
+/**
+ *  データの書き込みをします
+ *
+ * @param  string  $id_data 保存したデータのキー
+ * @param  mixed   $data    保存したいデータ
+ * @return boolean          データの保存成功は true、失敗は false
+ */
+ function save_data($id_data,$data)
+ {
+    $params = [
+        'command' => 'save',
+        'id'      => $id_data,
+        'value'   => $data,
+    ];
+    $result_api = run_script('system/data-io', $params, false);
+    $result     = decode_api_to_array($result_api);
+
+    return  ($result['result'] == 'OK');
+ }
+
 
 /* ---------------------------------
     環境／その他 Functions
