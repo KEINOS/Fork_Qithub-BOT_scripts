@@ -165,16 +165,15 @@ if (IS_PROC_REGULAR) {
 
             // トゥートの実行
             if ($result['result'] == 'OK') {
-                $params = [
+                $result_toot = post_toot([
                     'status'       => $result['value'],
                     'domain'       => $keys_api['domain'],
                     'access_token' => $keys_api['access_token'],
                     'visibility'   => 'unlisted',
-                ];
-                $result_api = run_script('system/post-toot', $params, false);
-                $result     = decode_api_to_array($result_api);
-                if ($result['result'] == 'OK') {
-                    $id_pre_toot = json_decode($result['value'], JSON_OBJECT_AS_ARRAY)['id'];
+                ]);
+
+                if ($result_toot) {
+                    $id_pre_toot = json_decode($result_toot['value'], JSON_OBJECT_AS_ARRAY)['id'];
                     // 今回のトゥートIDの保存
                     $result = save_data($id_data, $id_pre_toot);
                     if ($result['result'] == true) {
@@ -423,6 +422,14 @@ function delete_toot($params)
     $result     = decode_api_to_array($result_api);
 
     return  ( $result['result'] == 'OK' );
+}
+
+function post_toot($params)
+{
+    $result_api = run_script('system/post-toot', $params, false);
+    $result     = decode_api_to_array($result_api);
+
+    return  ( $result['result'] == 'OK' ) ? $result : false;
 }
 
 
