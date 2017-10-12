@@ -116,16 +116,18 @@ if (IS_PROC_REGULAR) {
             break;
 
         case 'sample':
-            // 保存？
-            $timestamp = date("Y/m/d H:i:s");
-            $sample    = [
-                'time_stamp' => $timestamp,
+            // サンプルデータのデータID
+            $id_data = 'sample';
+
+            // サンプルデータの作成と保存
+            $sample_data = [
+                'time_stamp' => date("Y/m/d H:i:s"),
                 'hoge'       => 'hoge',
             ];
+            save_data($id_data, $sample_data);
 
-            // 読み込み
-            $id_data = 'sample';
-            $result  = load_data($id_data);
+            // サンプルデータの読み込み
+            $result = load_data($id_data);
             print_r($result);
             break;
 
