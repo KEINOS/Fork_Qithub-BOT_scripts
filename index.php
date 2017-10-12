@@ -153,9 +153,9 @@ if (IS_PROC_REGULAR) {
             }
 
             // トゥートメッセージの作成
-            $msg_last_tootid = ( $has_pre_toot ) ? "Last toot ID was: ${id_pre_toot}\n" : '';
             $timestamp       = date("Y/m/d H:i:s");
             $msg_toot        = "\n" . "Tooted at: ${timestamp}";
+            $msg_last_tootid = ( $has_pre_toot ) ? "Last toot ID was: ${id_pre_toot}\n" : '';
             $msg_toot       .= "\n" . $msg_last_tootid . $msg_toot_deleted;
             $params = [
                 'say_also' => $msg_toot,
