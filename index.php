@@ -62,6 +62,27 @@ if (IS_PROC_REGULAR) {
             // ログの操作（view, delete）
             if (isset($_GET['method'])) {
                 switch ($_GET['method']) {
+                    // ログの一部削除（ログのキー）
+                    case 'delete':
+                        // 削除するログのキーを取得
+                        $key_to_delete = $_GET['key'];
+                        // 削除の実行（データのアップデート）
+                        if (isset($log_data[$key_to_delete])) {
+                            unset($log_data[$key_to_delete]);
+                            if (save_data($id_data, $log_data)) {
+                                $log_data = load_data($id_data);
+                            } else {
+                                $log_data = 'Error on updating log';
+                            }
+
+                            echo '<pre style=\'width:100%;overflow: auto;white-space: pre-wrap; word-wrap: break-word;\'>' . PHP_EOL;
+                            print_r($log_data);
+                            echo '</pre>' . PHP_EOL;
+                        } else {
+                            echo "id ありません";
+                        }
+                        break;
+
                     // ログ表示（WebHook からのデータの保存内容の確認）
                     case 'view':
                         echo '<pre style=\'width:100%;overflow: auto;white-space: pre-wrap; word-wrap: break-word;\'>' . PHP_EOL;
@@ -123,14 +144,11 @@ if (IS_PROC_REGULAR) {
             $msg_toot_deleted = '';
             $is_toot_deleted  = false;
             if ($has_pre_toot) {
-                $params = [
+                $is_toot_deleted = delete_toot([
                     'domain'       => $keys_api['domain'],
                     'access_token' => $keys_api['access_token'],
                     'id'           => $id_pre_toot,
-                ];
-                $result_api       = run_script('system/delete-toot', $params, false);
-                $result           = decode_api_to_array($result_api);
-                $is_toot_deleted  = ( $result['result'] == 'OK' ) ?: false;
+                ]);
                 $msg_toot_deleted = ( $is_toot_deleted ) ? "Last toot has been deleted.\n" : "Error deleting toot.\n";
             }
 
@@ -395,6 +413,18 @@ function get_path_exe($lang_type)
 
     return $path_cli;
 }
+/* ---------------------------------
+    Plugin Functions
+    'plugins/xxxxxx'のQithub API ラッパー
+   --------------------------------- */
+function delete_toot($params)
+{
+    $result_api = run_script('system/delete-toot', $params, false);
+    $result     = decode_api_to_array($result_api);
+
+    return  ( $result['result'] == 'OK' );
+}
+
 
 /* ---------------------------------
     DATA I/O Functions
