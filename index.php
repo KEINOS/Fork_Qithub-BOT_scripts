@@ -207,8 +207,20 @@ if (IS_PROC_REGULAR) {
 
             break;
 
+        case 'toot-daily':
+            // 今日の日付
+            $id_today = (int) date('Ymd');
+            // トゥートIDの保存キー（データID）
+            $id_data = 'toot_id_of_daily_toot';
 
 
+            // 前回トゥートのIDを取得
+            //$id_pre_toot  = load_data($id_data);
+            //$has_pre_toot = ($id_pre_toot !== false);
+            
+            echo $id_today;
+            
+            break;
 
         default:
             echo 'その他の処理';
