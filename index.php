@@ -48,44 +48,96 @@ if (IS_PROC_REGULAR) {
     クエリの'process'値で分岐処理
    --------------------------------- */
     switch (strtolower($_GET['process'])) {
+        // GitHub からの WebHook 処理
         case 'github':
-            echo 'GitHubからのWebHook処理';
-            break;
+            // WebHook からのデータ保存キー（データID）
+            $id_data = 'WebHook-GitHub';
 
-        case 'sample':
-            $time_stamp = date("Y/m/d H:i:s");
-            $sample = [
-                'time_stamp'=>$time_stamp,
-                'hoge'=>'hoge',
-            ];
-            $params = [
-                'command' => 'load',
-                'id'      => 'sample',
-                'value'   => $sample,
-            ];
+            // 保存済みデータの読み込み
+            $log_data = load_data($id_data);
+            if ($log_data === false) {
+                $log_data = array();
+            }
 
-            $result_api = run_script('system/data-io', $params, false);
-            $result     = decode_api_to_array($result_api);
+            // ログの操作（view, delete）
+            if (isset($_GET['method'])) {
+                switch ($_GET['method']) {
+                    // ログの一部削除（ログのキー）
+                    case 'delete':
+                        // 削除するログのキーを取得
+                        $key_to_delete = $_GET['key'];
+                        // 削除の実行（データのアップデート）
+                        if (isset($log_data[$key_to_delete])) {
+                            unset($log_data[$key_to_delete]);
+                            if (save_data($id_data, $log_data)) {
+                                $log_data = load_data($id_data);
+                            } else {
+                                $log_data = 'Error on updating log';
+                            }
 
-            if ($result['result']) {
-                print_r($result);
+                            echo '<pre style=\'width:100%;overflow: auto;white-space: pre-wrap; word-wrap: break-word;\'>' . PHP_EOL;
+                            print_r($log_data);
+                            echo '</pre>' . PHP_EOL;
+                        } else {
+                            echo "id ありません";
+                        }
+                        break;
+
+                    // ログ表示（WebHook からのデータの保存内容の確認）
+                    case 'view':
+                        echo '<pre style=\'width:100%;overflow: auto;white-space: pre-wrap; word-wrap: break-word;\'>' . PHP_EOL;
+                        print_r($log_data);
+                        echo '</pre>' . PHP_EOL;
+                        break;
+                    default:
+                        break;
+                }
+                die();
+
+            // ログ（WebHook からのデータ）の保存
+            } else {
+                // GitHub からの POST データ（WebHook 内容）の追加保存
+                $timestamp = date("Ymd-His");
+                $log_data[$timestamp] = [
+                    'getallheaders' => getallheaders(),
+                    'get'           => $_GET,
+                    'post'          => $_POST,
+                    'ip'            => $_SERVER["REMOTE_ADDR"],
+                    'host'          => gethostbyaddr($_SERVER["REMOTE_ADDR"]),
+                    'raw_post_data' => file_get_contents('php://input'),
+                ];
+                $result = save_data($id_data, $log_data);
+                if ($result==true) {
+                    echo "Data saved." . PHP_EOL;
+                    echo "Data ID/key was: ${id_data}/${timestamp}" . PHP_EOL;
+                }
             }
 
             break;
 
+        case 'sample':
+            // サンプルデータのデータID
+            $id_data = 'sample';
+
+            // サンプルデータの作成と保存
+            $sample_data = [
+                'time_stamp' => date("Y/m/d H:i:s"),
+                'hoge'       => 'hoge',
+            ];
+            save_data($id_data, $sample_data);
+
+            // サンプルデータの読み込み
+            $result = load_data($id_data);
+            print_r($result);
+            break;
+
         case 'say-hello-world':
             // トゥートIDの保存キー（データID）
-            $key_data = 'last-toot-id_say-hello-world';
+            $id_data = 'last-toot-id_say-hello-world';
 
             // 前回トゥートのIDを取得
-            $params = [
-                'command' => 'load',
-                'id'      => $key_data,
-            ];
-            $result_api   = run_script('system/data-io', $params, false);
-            $result       = decode_api_to_array($result_api);
-            $has_pre_toot = ( $result['result'] == 'OK' ) ?: false;
-            $id_last_toot = ( $has_pre_toot ) ? $result['value'] : '';
+            $id_pre_toot  = load_data($id_data);
+            $has_pre_toot = ($id_pre_toot !== false);
 
             // トゥートに必要なAPIの取得
             $keys_api = get_api_keys('../../qithub.conf.json', 'qiitadon');
@@ -94,21 +146,18 @@ if (IS_PROC_REGULAR) {
             $msg_toot_deleted = '';
             $is_toot_deleted  = false;
             if ($has_pre_toot) {
-                $params = [
+                $is_toot_deleted = delete_toot([
                     'domain'       => $keys_api['domain'],
                     'access_token' => $keys_api['access_token'],
-                    'id'           => $id_last_toot,
-                ];
-                $result_api       = run_script('system/delete-toot', $params, false);
-                $result           = decode_api_to_array($result_api);
-                $is_toot_deleted  = ( $result['result'] == 'OK' ) ?: false;
+                    'id'           => $id_pre_toot,
+                ]);
                 $msg_toot_deleted = ( $is_toot_deleted ) ? "Last toot has been deleted.\n" : "Error deleting toot.\n";
             }
 
             // トゥートメッセージの作成
-            $msg_last_tootid = ( $has_pre_toot    ) ? "Last toot ID was: ${id_last_toot}\n" : '';
             $timestamp       = date("Y/m/d H:i:s");
             $msg_toot        = "\n" . "Tooted at: ${timestamp}";
+            $msg_last_tootid = ( $has_pre_toot ) ? "Last toot ID was: ${id_pre_toot}\n" : '';
             $msg_toot       .= "\n" . $msg_last_tootid . $msg_toot_deleted;
             $params = [
                 'say_also' => $msg_toot,
@@ -118,26 +167,19 @@ if (IS_PROC_REGULAR) {
 
             // トゥートの実行
             if ($result['result'] == 'OK') {
-                $params = [
+                $result_toot = post_toot([
                     'status'       => $result['value'],
                     'domain'       => $keys_api['domain'],
                     'access_token' => $keys_api['access_token'],
                     'visibility'   => 'unlisted',
-                ];
-                $result_api = run_script('system/post-toot', $params, false);
-                $result     = decode_api_to_array($result_api);
-                if ($result['result'] == 'OK') {
-                    $id_last_toot = json_decode($result['value'], JSON_OBJECT_AS_ARRAY)['id'];
+                ]);
+
+                if ($result_toot) {
+                    $id_pre_toot = json_decode($result_toot['value'], JSON_OBJECT_AS_ARRAY)['id'];
                     // 今回のトゥートIDの保存
-                    $params = [
-                        'command' => 'save',
-                        'id'      => $key_data,
-                        'value'   => $id_last_toot,
-                    ];
-                    $result_api = run_script('system/data-io', $params, false);
-                    $result     = decode_api_to_array($result_api);
-                    if ($result['result'] == 'OK') {
-                        echo "Saved last toot ID as : ${id_last_toot}" . PHP_EOL;
+                    $result = save_data($id_data, $id_pre_toot);
+                    if ($result['result'] == true) {
+                        echo "Saved last toot ID as : ${id_pre_toot}" . PHP_EOL;
                         echo "Tooted msg was ${msg_toot}" . PHP_EOL;
                     }
                 }
@@ -146,10 +188,9 @@ if (IS_PROC_REGULAR) {
             break;
 
         case 'get-qiita-new-items':
-            
-            if(isset($_GET['max_items'])){
+            if (isset($_GET['max_items'])) {
                 $max_items = (int) $_GET['max_items'];
-            }else{
+            } else {
                 $max_items = 5;
             }
 
@@ -186,12 +227,13 @@ die(); // END of MAIN
  * を参照して準拠してください。
  *
  * @param  string  $dir_name        スクリプトのディレクトリ名。
+ *                                  エンドポイント名。
  *                                  'system/<script name>'
  *                                  'plugin/<script name>'
  * @param  array   $params          スクリプトに渡す配列（パラメーター）
  * @param  boolean $run_background  trueの場合、実行結果を待たずにバック
  *                                  グラウンドで実行します
- * @return json or boolean          バックグラウンド実行の場合は
+ * @return json or boolean          バックグラウンド実行の場合は常にtrue
  */
 function run_script($dir_name, $params, $run_background = true)
 {
@@ -371,6 +413,94 @@ function get_path_exe($lang_type)
     }
 
     return $path_cli;
+}
+/* ---------------------------------
+    Plugin Functions
+    'plugins/xxxxxx'のQithub API ラッパー
+   --------------------------------- */
+function delete_toot($params)
+{
+    $result_api = run_script('system/delete-toot', $params, false);
+    $result     = decode_api_to_array($result_api);
+
+    return  ( $result['result'] == 'OK' );
+}
+
+function post_toot($params)
+{
+    $result_api = run_script('system/post-toot', $params, false);
+    $result     = decode_api_to_array($result_api);
+
+    return  ( $result['result'] == 'OK' ) ? $result : false;
+}
+
+
+/* ---------------------------------
+    DATA I/O Functions
+    'system/data-io'のQithub API ラッパー
+   --------------------------------- */
+/**
+ *  データの読み込みをします
+ *
+ * @param  string  $id_data 保存したデータのキー
+ * @return mixed            保存したデータ
+ */
+function load_data($id_data)
+{
+    $params   = [
+        'command' => 'load',
+        'id'      => $id_data,
+    ];
+    $result_api = run_script('system/data-io', $params, false);
+    $result     = decode_api_to_array($result_api);
+    if ($result['result'] == 'OK') {
+        return $result['value'];
+    } else {
+        throw new Exception("不正なデータIDです： ${id_data}");
+        return false;
+    }
+}
+
+/**
+ *  データの書き込みをします
+ *
+ * @param  string  $id_data 保存したデータのキー
+ * @param  mixed   $data    保存したいデータ
+ * @return boolean          データの保存成功は true、失敗は false
+ */
+function save_data($id_data, $data)
+{
+    $params = [
+        'command' => 'save',
+        'id'      => $id_data,
+        'value'   => $data,
+    ];
+    $result_api = run_script('system/data-io', $params, false);
+    $result     = decode_api_to_array($result_api);
+
+    return  ($result['result'] == 'OK');
+}
+
+/**
+ *  データの削除をします
+ *
+ * @param  string  $id_data 保存したデータのキー
+ * @return boolean          削除されれば true
+ */
+function delete_data($id_data)
+{
+    $params   = [
+        'command' => 'delete',
+        'id'      => $id_data,
+    ];
+    $result_api = run_script('system/data-io', $params, false);
+    $result     = decode_api_to_array($result_api);
+    if ($result['result'] == 'OK') {
+        return $result['value'];
+    } else {
+        throw new Exception("不正なデータIDです： ${id_data}");
+        return false;
+    }
 }
 
 /* ---------------------------------
