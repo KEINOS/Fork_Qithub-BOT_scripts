@@ -25,6 +25,7 @@ define('IS_MODE_DEBUG', isset($_GET['mode']) and ($_GET['mode'] == 'debug'));
 define('IS_PROC_REGULAR', ! isset($_GET['process'])); // 定例処理
 define('IS_PROC_DEMAND', isset($_GET['process']));    // 随時処理
 define('DIR_SEP', DIRECTORY_SEPARATOR);
+define('LOAD_DATA_EMPTY', false);
 
 // 'system' および 'plugin' が使えるプログラム言語
 $extension_types = [
@@ -55,7 +56,7 @@ if (IS_PROC_REGULAR) {
 
             // 保存済みデータの読み込み
             $log_data = load_data($id_data);
-            if ($log_data === false) {
+            if ($log_data === LOAD_DATA_EMPTY) {
                 $log_data = array();
             }
 
@@ -137,7 +138,7 @@ if (IS_PROC_REGULAR) {
 
             // 前回トゥートのIDを取得
             $id_pre_toot  = load_data($id_data);
-            $has_pre_toot = ($id_pre_toot !== false);
+            $has_pre_toot = ($id_pre_toot !== LOAD_DATA_EMPTY);
 
             // トゥートに必要なAPIの取得
             $keys_api = get_api_keys('../../qithub.conf.json', 'qiitadon');
@@ -208,18 +209,34 @@ if (IS_PROC_REGULAR) {
             break;
 
         case 'toot-daily':
-            // 今日の日付
+            // 今日の日付のIDを取得
             $id_today = (int) date('Ymd');
+
             // トゥートIDの保存キー（データID）
-            $id_data = 'toot_id_of_daily_toot';
+            $id_data = 'toot_id_and_date_of_daily_toot';
 
+            // 今日の初回トゥートのIDを取得
+            $info_toot = load_data($id_data);
 
-            // 前回トゥートのIDを取得
-            //$id_pre_toot  = load_data($id_data);
-            //$has_pre_toot = ($id_pre_toot !== false);
-            
-            echo $id_today;
-            
+            // 初回トゥートが ある 場合の処理
+            if ( $info_toot !== LOAD_DATA_EMPTY ) {
+                echo "has pre toot";
+
+            // 初回トゥートが ない 場合の処理
+            } else {
+                // トゥート内容の作成
+                $date_today = date('Y/m/d')
+                $msg = "${date_today} のトゥートを始めるよ！";
+
+                // トゥート！
+                $result_toot = post_toot([
+                    'status'       => $result['value'],
+                    'domain'       => $keys_api['domain'],
+                    'access_token' => $keys_api['access_token'],
+                    'visibility'   => 'unlisted',
+                ]);
+            }
+
             break;
 
         default:
@@ -468,8 +485,8 @@ function load_data($id_data)
     if ($result['result'] == 'OK') {
         return $result['value'];
     } else {
-        throw new Exception("不正なデータIDです： ${id_data}");
-        return false;
+        debug_msg("【読み込みエラー】Data ID：'${id_data}' でのデータ読み込み時にエラーが発生しました。<br>\n【エラー内容】${result['value']}");
+        return LOAD_DATA_EMPTY;
     }
 }
 
@@ -510,7 +527,7 @@ function delete_data($id_data)
     if ($result['result'] == 'OK') {
         return $result['value'];
     } else {
-        throw new Exception("不正なデータIDです： ${id_data}");
+        throw new Exception("不正なデータIDです：\n ID：${id_data}\n 内容：${result['value']}");
         return false;
     }
 }
@@ -518,6 +535,18 @@ function delete_data($id_data)
 /* ---------------------------------
     環境／その他 Functions
    --------------------------------- */
+function debug_msg($str)
+{
+    if (IS_MODE_DEBUG) {
+        $line = debug_backtrace()[1]['line'];
+        //$line = print_r(debug_backtrace(),true);
+        trigger_error(
+            "${str}【呼び出し元】 ${line}行<br>\n",
+            E_USER_WARNING
+        );
+    }
+}
+
 /**
  *  実行環境の言語を日本語に設定しタイムゾーンを設定する
  *
