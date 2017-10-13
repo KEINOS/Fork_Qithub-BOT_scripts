@@ -13,8 +13,10 @@
  *     'status'       => string トゥート内容
  *     'visibility'   => string 'public','unlisted','private','direct'
  *   オプション項目
- *     'spoiler_text' => string この項目があると'CW'モードになり'status'
- *                              は「もっと読む」内の非表示領域になります。
+ *     'spoiler_text'   => string この項目があると'CW'モードになり'status'
+ *                                は「もっと読む」内の非表示領域になります。
+ *     'in_reply_to_id' => string この項目があると値のトゥートIDに対して
+ *                                返信扱いになります。
  *
  * ■出力項目
  *     'result' => string 'OK','NG'
@@ -41,9 +43,18 @@ if (is_requirement_complied($arg)) {
     $access_token = $arg['access_token'];
     $domain       = $arg['domain'];
 
+    
+    // 返信の判断処理
+    $query_additional = '';
+    if( isset($arg['in_reply_to_id']) && !empty($arg['in_reply_to_id'])){
+        $in_reply_to_id = $arg['in_reply_to_id'];
+        $query_additional = " -d 'in_reply_to_id=${in_reply_to_id}'";        
+    }
+
     $query  = 'curl -X POST';
     $query .= " -d 'status=${toot_msg}'";
     $query .= " -d 'visibility=${visibility}'";
+    $query .= $query_additional;
     $query .= " --header 'Authorization: Bearer ${access_token}'";
     $query .= " -sS https://${domain}/api/v1/statuses;";
  
