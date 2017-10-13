@@ -26,6 +26,10 @@ define('IS_PROC_REGULAR', ! isset($_GET['process'])); // 定例処理
 define('IS_PROC_DEMAND', isset($_GET['process']));    // 随時処理
 define('DIR_SEP', DIRECTORY_SEPARATOR);
 define('LOAD_DATA_EMPTY', false);
+define('SAVE_DATA_SUCCESS', true);
+define('SAVE_DATA_FAIL', false);
+define('TOOT_SUCCESS', true);
+define('TOOT_FAIL', false);
 
 // 'system' および 'plugin' が使えるプログラム言語
 $extension_types = [
@@ -209,33 +213,96 @@ if (IS_PROC_REGULAR) {
             break;
 
         case 'toot-daily':
-            // 今日の日付のIDを取得
-            $id_today = (int) date('Ymd');
+            // トゥートに必要なAPIの取得
+            $keys_api = get_api_keys('../../qithub.conf.json', 'qiitadon');
 
-            // トゥートIDの保存キー（データID）
+            // トゥートのIDと日付を保存するキー（データID）
             $id_data = 'toot_id_and_date_of_daily_toot';
 
-            // 今日の初回トゥートのIDを取得
+            // トゥート済みのトゥートIDと日付を取得
             $info_toot = load_data($id_data);
+            
+            // 今日の日付を取得
+            $id_date = (int) date('Ymd');            
 
-            // 初回トゥートが ある 場合の処理
-            if ( $info_toot !== LOAD_DATA_EMPTY ) {
-                echo "has pre toot";
+            // トゥートIDの初期化
+            $id_toot = '';
 
-            // 初回トゥートが ない 場合の処理
+            // 保存データの有無確認
+            if ($info_toot !== LOAD_DATA_EMPTY) {
+                // 本日の初トゥートフラグ（保存日の比較）
+                $is_new_toot = ($info_toot['id_date'] !== $id_date);
+                // トゥートIDの取得
+                $id_toot = $info_toot['id_toot'];
             } else {
+                // 本日の初トゥートフラグ
+                $is_new_toot = true;
+            }
+
+            // 今日の初トゥート実行とID＆日付の保存
+            if ($is_new_toot) {
                 // トゥート内容の作成
-                $date_today = date('Y/m/d')
+                $date_today = date('Y/m/d');
                 $msg = "${date_today} のトゥートを始めるよ！";
 
-                // トゥート！
+                // トゥートの実行とトゥート結果の取得
                 $result_toot = post_toot([
-                    'status'       => $result['value'],
+                    'status'       => $msg,
                     'domain'       => $keys_api['domain'],
                     'access_token' => $keys_api['access_token'],
                     'visibility'   => 'unlisted',
                 ]);
+                // トゥートIDと今日の日付を保存
+                if ($result_toot) {
+                    // トゥートIDの取得
+                    $id_toot = json_decode($result_toot['value'], JSON_OBJECT_AS_ARRAY)['id'];
+                    // 保存データ
+                    $info_toot_to_save = [
+                        'id_toot' => $id_toot,
+                        'id_date' => $id_date,
+                    ];
+                    // 今回のトゥートIDの保存
+                    $result_save = save_data($id_data, $info_toot_to_save);
+                    if ($result_save == SAVE_DATA_SUCCESS) {
+                        echo "Toot info saved.<br>" . PHP_EOL;
+                    }
+                }
+            // 本日のトゥート発信済みなので、それに返信
+            } else {
+                // タイムスタンプ
+                $timestamp = time();
+                // タイムスタンプの偶数・奇数でメッセージを変更
+                // 後日実装予定の新着Qiita記事がフォロワーの場合に備えて
+                // の準備として
+                if($timestamp % 2 == 0){
+                    $msg_branch = "偶数だにゃーん\n\n";
+                }else{
+                    $msg_branch = "奇数だにゃーん\n\n";                    
+                }
+                // トゥート内容の作成
+                $date_today = date('Y/m/d H:i:s', $timestamp);
+                $msg  = $msg_branch;
+                $msg .= "Posted at :${date_today}\n";
+                $msg .= "In reply to :${id_toot}\n";
+
+                // トゥートの実行とトゥート結果の取得
+                $result_toot = post_toot([
+                    'status'         => $msg,
+                    'domain'         => $keys_api['domain'],
+                    'access_token'   => $keys_api['access_token'],
+                    'in_reply_to_id' => $id_toot,
+                    'visibility'     => 'unlisted',
+                ]);
+                
+                // 結果の表示
+                if($result_toot = TOOT_SUCCESS){
+                    echo "Reply toot success.<br>\n";
+                }else{
+                    echo "Reply toot fail.<br>\n";
+                }
+                
             }
+
 
             break;
 
@@ -507,7 +574,7 @@ function save_data($id_data, $data)
     $result_api = run_script('system/data-io', $params, false);
     $result     = decode_api_to_array($result_api);
 
-    return  ($result['result'] == 'OK');
+    return ($result['result'] == 'OK') ? SAVE_DATA_SUCCESS : SAVE_DATA_FAIL;
 }
 
 /**
