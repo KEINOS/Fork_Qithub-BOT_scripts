@@ -315,24 +315,28 @@ if (IS_PROC_REGULAR) {
 
             break;
 
-        case 'get-current-user-info':
+        case 'get-mastodon-user-info':
+            // Returns the authenticated user's Account information.
             // Mastodon API に必要なキーの取得
             $keys_api = get_api_keys('../../qithub.conf.json', 'qiitadon');
-            
-            // API のリクエスト・クエリ作成
-            $access_token = $keys_api['access_token'];
-            $domain       = $keys_api['domain'];
-            $endpoint     = '/api/v1/accounts/verify_credentials';
 
-            $query  = 'curl -X GET';
-            $query .= " --header 'Authorization: Bearer ${access_token}'";
-            $query .= " -sS https://${domain}${endpoint};";
+            // トゥートのパラメーター設定（返信投稿）
+            $params = [
+                'domain'         => $keys_api['domain'],
+                'access_token'   => $keys_api['access_token'],
+                'force_update'   => false,
+            ];
 
-            // API のリクエスト
-            $result_value = `$query`;
+            $result_api = run_script('system/get-mastodon-user-info', $params, false);
+            $result     = decode_api_to_array($result_api);
+            if(isset($result['result']) && $result['result']=='OK'){
+                // リクエスト結果の表示
+                echo_on_debug(json_decode($result['value'], JSON_OBJECT_AS_ARRAY));
+            }else{
+                echo 'Request error';
+            }
             
-            // リクエスト結果の表示
-            echo_on_debug(json_decode($result_value, JSON_OBJECT_AS_ARRAY));
+            
             break;
 
         default:
