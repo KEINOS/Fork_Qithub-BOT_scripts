@@ -329,14 +329,14 @@ if (IS_PROC_REGULAR) {
 
             $result_api = run_script('system/get-mastodon-user-info', $params, false);
             $result     = decode_api_to_array($result_api);
-            if(isset($result['result']) && $result['result']=='OK'){
+            if (isset($result['result']) && $result['result']=='OK') {
                 // リクエスト結果の表示
                 echo_on_debug(json_decode($result['value'], JSON_OBJECT_AS_ARRAY));
-            }else{
+            } else {
                 echo 'Request error';
             }
-            
-            
+
+
             break;
 
         default:
@@ -641,7 +641,7 @@ function debug_msg($str)
         $line = debug_backtrace()[1]['line'];
         //$line = print_r(debug_backtrace(),true);
         trigger_error(
-            "${str}【呼び出し元】 ${line}行<br>\n" ,
+            "${str}【呼び出し元】 ${line}行<br>\n",
             E_USER_WARNING
         );
     }
