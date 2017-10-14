@@ -221,9 +221,9 @@ if (IS_PROC_REGULAR) {
 
             // トゥート済みのトゥートIDと日付を取得
             $info_toot = load_data($id_data);
-            
+
             // 今日の日付を取得
-            $id_date = (int) date('Ymd');            
+            $id_date = (int) date('Ymd');
 
             // トゥートIDの初期化
             $id_toot_current  = ''; // １つ前のトゥートID
@@ -236,7 +236,6 @@ if (IS_PROC_REGULAR) {
                 // トゥートIDの取得
                 $id_toot_current  = $info_toot['id_toot_current'];
                 $id_toot_original = $info_toot['id_toot_original'];
-
             } else {
                 // 本日の初トゥートフラグ
                 $is_new_toot = true;
@@ -263,10 +262,10 @@ if (IS_PROC_REGULAR) {
                 // タイムスタンプの偶数・奇数でメッセージを変更
                 // 後日実装予定の新着Qiita記事がフォロワーの場合に備えて
                 // の準備として
-                if($timestamp % 2 == 0){
+                if ($timestamp % 2 == 0) {
                     $msg_branch = "偶数だにゃーん\n\n";
-                }else{
-                    $msg_branch = "奇数だにゃーん\n\n";                    
+                } else {
+                    $msg_branch = "奇数だにゃーん\n\n";
                 }
                 // トゥート内容の作成
                 $date_today = date('Y/m/d H:i:s', $timestamp);
@@ -284,12 +283,12 @@ if (IS_PROC_REGULAR) {
                 ];
             }
             // トゥートの実行
-            $result_toot = post_toot( $params );
+            $result_toot = post_toot($params);
 
             // トゥート結果の表示とトゥートID＆今日の日付を保存
-            if($result_toot == TOOT_SUCCESS){
+            if ($result_toot == TOOT_SUCCESS) {
                 // トゥートIDの取得
-                $id_toot_current = json_decode($result_toot['value'], JSON_OBJECT_AS_ARRAY)['id'];                
+                $id_toot_current = json_decode($result_toot['value'], JSON_OBJECT_AS_ARRAY)['id'];
                 // 親トゥートのID取得
                 $id_toot_original = ($is_new_toot) ? $id_toot_current : $id_toot_original;
                 // 保存するデータ
@@ -310,10 +309,30 @@ if (IS_PROC_REGULAR) {
                 echo ($is_new_toot) ? "New toot " : "Reply toot ";
                 echo " posted successfuly.<br>\n";
                 print_r($info_toot_to_save);
-            }else{
+            } else {
                 echo "Toot fail.<br>\n";
             }
 
+            break;
+
+        case 'get-current-user-info':
+            // Mastodon API に必要なキーの取得
+            $keys_api = get_api_keys('../../qithub.conf.json', 'qiitadon');
+            
+            // API のリクエスト・クエリ作成
+            $access_token = $keys_api['access_token'];
+            $domain       = $keys_api['domain'];
+            $endpoint     = '/api/v1/accounts/verify_credentials';
+
+            $query  = 'curl -X GET';
+            $query .= " --header 'Authorization: Bearer ${access_token}'";
+            $query .= " -sS https://${domain}${endpoint};";
+
+            // API のリクエスト
+            $result_value = `$query`;
+            
+            // リクエスト結果の表示
+            echo_on_debug(json_decode($result_value, JSON_OBJECT_AS_ARRAY));
             break;
 
         default:
@@ -618,9 +637,22 @@ function debug_msg($str)
         $line = debug_backtrace()[1]['line'];
         //$line = print_r(debug_backtrace(),true);
         trigger_error(
-            "${str}【呼び出し元】 ${line}行<br>\n",
+            "${str}【呼び出し元】 ${line}行<br>\n" ,
             E_USER_WARNING
         );
+    }
+}
+
+function echo_on_debug($expression)
+{
+    if (IS_MODE_DEBUG) {
+        if (is_string($expression)) {
+            echo "<pre>${expression}</pre>\n";
+        } else {
+            echo '<pre>';
+            print_r($expression);
+            echo "</pre>\n";
+        }
     }
 }
 
