@@ -90,9 +90,10 @@ if (is_requirement_complied($arg)) {
     }
 
     // レスポンス用の JSON データ（$result_json）取得
-    if (( $use_cash == YES ) && ( file_exists( $path_file_cache) )) {
-        // キャッシュを利用
-        $data_loaded = unserialize(file_get_contents( $path_file_cache));
+    if (( $use_cash == YES ) && ( file_exists($path_file_cache) )) {
+        // キャッシュの読み込み
+        $data_loaded = unserialize(file_get_contents($path_file_cache));
+        // レスポンス用データ（キャッシュ有効か否かを付加）
         $result_json = json_encode(['use_cash'=>$use_cash] + $data_loaded);
     } else {
        //$use_cash=YES でもキャッシュファイルが無い場合があるので再セット
@@ -111,10 +112,10 @@ if (is_requirement_complied($arg)) {
         $query  = 'curl -X GET';
         $query .= " --header 'Authorization: Bearer ${access_token}'";
         $query .= " -sS https://${domain}${endpoint};";
-
         $result_json_followers  = `$query`;
         $result_array_followers = json_decode($result_json_followers, JSON_OBJECT_AS_ARRAY);
 
+        // 保存するデータ
         $data_to_save = [
             'updated_at'      => time(),
             'id_target'       => $id_target,
@@ -123,36 +124,33 @@ if (is_requirement_complied($arg)) {
             'followers'       => $result_array_followers,
         ];
 
-        /**
-         * 取得情報の保存（キャッシュ実行）
-         */
-        if ($is_self_account) {
-            // BOT のアカウントIDを保存
+        // BOT のアカウントIDを保存（初回のみ）
+        if ($is_self_account && ! file_exists($path_file_data_botid)) {
             file_put_contents($path_file_data_bot, serialize($id_target));
         }
-        // 取得したアカウントの情報を保存
-        $path_file_cache = $path_dir_data . "${id_target}.dat";
-        file_put_contents( $path_file_cache, serialize($data_to_save));
 
-        // レスポンス用データ
+        // 取得したアカウントの情報を保存（キャッシュ）
+        $path_file_cache = $path_dir_data . "${id_target}.dat";
+        file_put_contents($path_file_cache, serialize($data_to_save));
+
+        // レスポンス用データ（キャッシュ有効か否かを付加）
         $result_json = json_encode(['use_cash'=>$use_cash] + $data_to_save);
     }
 
     // リクエストの結果
     /** @todo サーバが500の場合なども'OK'を返してしまうので要改善 */
-        $result = 'OK';
-        echo encode_array_to_api([
+    $result = 'OK';
+    echo encode_array_to_api([
         'result' => $result,
         'value'  => $result_json,
-        ]);
+    ]);
 } else {
-    // 必須項目が足りない場合の処理
+    // 必須項目が足りない場合のレスポンス処理
     $temp = print_r($arg, true);
-
-    die(encode_array_to_api([
+    echo encode_array_to_api([
         'result' => 'NG',
         'value'  => "必須項目が足りません。\n${temp}",
-    ]));
+    ]);
 }
 
 
