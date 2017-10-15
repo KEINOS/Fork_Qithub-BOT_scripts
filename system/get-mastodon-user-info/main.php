@@ -42,8 +42,13 @@ define('NO', false);
 // 標準入力を取得
 $arg = get_api_input_as_array();
 
-// 必須項目を満たしていた場合の処理
+/**
+ * リクエストにより受け取ったパラメーターが必須項目を満たしていた場合、
+ * BOT もしくはオプションで指定されたユーザーの Mastodon アカウント情報
+ * およびフォロワーの情報を取得しレスポンスとして返します。
+ */
 if (is_requirement_complied($arg)) {
+    // 必須項目
     $access_token = $arg['access_token'];
     $domain       = $arg['domain'];
 
@@ -51,62 +56,58 @@ if (is_requirement_complied($arg)) {
     $use_cash        = YES;
     $is_self_account = YES;
 
+    // キャッシュの利用確認
     if (isset($arg['use_cash'])) {
         $use_cash = ($arg['use_cash'] == true);
     }
 
-    // データの保存先ディレクトリのパス
+    // データやキャッシュの保存先ディレクトリのパス
     $path_dir_current = dirname(__FILE__) . DIR_SEP;
     $path_dir_data    = $path_dir_current . DIR_NAME_DATA . DIR_SEP;
 
+    // BOT 自身もしくは指定ユーザーの Mastodon アカウント情報の取得に必要
+    // なエンドポイント設定とキャッシュのファイルパス設定
     if (isset($arg['id']) && ! empty($arg['id'])) {
+        // ユーザーが指定されている場合の設定
         $is_self_account = NO;
-        $id_target = (int) $arg['id'];
-        // キャッシュのパス
-        $path_file_data = $path_dir_data . "${id_target}.dat";
-
-        $endpoint  = "/api/v1/accounts/${id_target}";
+        $id_target       = (int) $arg['id'];
+        $path_file_cache = $path_dir_data . "${id_target}.dat";
+        $endpoint        = "/api/v1/accounts/${id_target}";
     } else {
+        // BOT の場合の処理
+        // BOT のアカウントID が取得済みであれば、そのIDのキャッシュの
+        // ファイルパスを設定し、自身(BOT)のエンドポイントを設定
         $is_self_account = YES;
-        $id_target = '';
-
-        /**
-         * BOT のアカウントIDを取得
-         */
-        $path_file_data_bot = $path_dir_data . 'id_self.dat';
-        if (file_exists($path_file_data_bot)) {
-            // キャッシュがあればそれを利用
-            $id_target = unserialize(file_get_contents($path_file_data_bot));
-            // 他アカウント同様、BOT自身のアカウント情報のキャッシュのパス
-            $path_file_data = $path_dir_data . "${id_target}.dat";
+        $path_file_data_botid = $path_dir_data . 'id_self.dat';
+        if (file_exists($path_file_data_botid)) {
+            $id_target       = unserialize(file_get_contents($path_file_data_botid));
+            $path_file_cache = $path_dir_data . "${id_target}.dat";
         } else {
             // BOT のアカウントIDを保存するためキャッシュをオフ（更新）
             $use_cash = NO;
         }
-
-        $endpoint  = '/api/v1/accounts/verify_credentials';
+        $endpoint = '/api/v1/accounts/verify_credentials';
     }
 
-    // キャッシュ処理
-    if (( $use_cash == YES ) && ( file_exists($path_file_data) )) {
-        $data_loaded = unserialize(file_get_contents($path_file_data));
+    // レスポンス用の JSON データ（$result_json）取得
+    if (( $use_cash == YES ) && ( file_exists( $path_file_cache) )) {
+        // キャッシュを利用
+        $data_loaded = unserialize(file_get_contents( $path_file_cache));
         $result_json = json_encode(['use_cash'=>$use_cash] + $data_loaded);
     } else {
-        //$use_cash=YES でもキャッシュファイルが無い場合があるので再セット
+       //$use_cash=YES でもキャッシュファイルが無い場合があるので再セット
         $use_cash = NO;
 
-        // アカウント情報を取得
+       // アカウント情報を取得
         $query  = 'curl -X GET';
         $query .= " --header 'Authorization: Bearer ${access_token}'";
         $query .= " -sS https://${domain}${endpoint};";
-
         $result_json_info = `$query`;
 
         // フォロワー情報を取得
         $result_array_info = json_decode($result_json_info, JSON_OBJECT_AS_ARRAY);
         $id_target = $result_array_info['id'];
         $endpoint  = "/api/v1/accounts/${id_target}/followers";
-
         $query  = 'curl -X GET';
         $query .= " --header 'Authorization: Bearer ${access_token}'";
         $query .= " -sS https://${domain}${endpoint};";
@@ -130,22 +131,21 @@ if (is_requirement_complied($arg)) {
             file_put_contents($path_file_data_bot, serialize($id_target));
         }
         // 取得したアカウントの情報を保存
-        $path_file_data = $path_dir_data . "${id_target}.dat";
-        file_put_contents($path_file_data, serialize($data_to_save));
+        $path_file_cache = $path_dir_data . "${id_target}.dat";
+        file_put_contents( $path_file_cache, serialize($data_to_save));
+
         // レスポンス用データ
         $result_json = json_encode(['use_cash'=>$use_cash] + $data_to_save);
     }
 
     // リクエストの結果
     /** @todo サーバが500の場合なども'OK'を返してしまうので要改善 */
-    $result = 'OK';
-    echo encode_array_to_api([
+        $result = 'OK';
+        echo encode_array_to_api([
         'result' => $result,
         'value'  => $result_json,
-    ]);
-
+        ]);
 } else {
-
     // 必須項目が足りない場合の処理
     $temp = print_r($arg, true);
 
