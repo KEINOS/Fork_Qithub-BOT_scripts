@@ -54,8 +54,11 @@ if (IS_PROC_REGULAR) {
    --------------------------------- */
     switch (strtolower($_GET['process'])) {
         // GitHub からの WebHook 処理
+        // クエリの'method'オプションが指定されていない場合は受け取った
+        // データを保存。'method'オプションによって保存データの閲覧・削
+        // 除を行う
         case 'github':
-            // WebHook からのデータ保存キー（データID）
+            // データを保存するキー（データID）
             $id_data = 'WebHook-GitHub';
 
             // 保存済みデータの読み込み
@@ -65,11 +68,12 @@ if (IS_PROC_REGULAR) {
             }
 
             // ログの操作（view, delete）
+            // 'method'オプションによる保存データの扱い
             if (isset($_GET['method'])) {
                 switch ($_GET['method']) {
-                    // ログの一部削除（ログのキー）
+                    // ログの一部削除
+                    // ログのキー（=タイムスタンプ）を指定して削除
                     case 'delete':
-                        // 削除するログのキーを取得
                         $key_to_delete = $_GET['key'];
                         // 削除の実行（データのアップデート）
                         if (isset($log_data[$key_to_delete])) {
@@ -84,7 +88,7 @@ if (IS_PROC_REGULAR) {
                             print_r($log_data);
                             echo '</pre>' . PHP_EOL;
                         } else {
-                            echo "id ありません";
+                            echo "削除するデータのキーが指定されていません。";
                         }
                         break;
 
@@ -99,10 +103,11 @@ if (IS_PROC_REGULAR) {
                 }
                 die();
 
-            // ログ（WebHook からのデータ）の保存
+            // WebHook からの受け取りデータの保存
             } else {
-                // GitHub からの POST データ（WebHook 内容）の追加保存
+                // データの保存キー
                 $timestamp = date("Ymd-His");
+                // データの作成
                 $log_data[$timestamp] = [
                     'getallheaders' => getallheaders(),
                     'get'           => $_GET,
@@ -111,7 +116,9 @@ if (IS_PROC_REGULAR) {
                     'host'          => gethostbyaddr($_SERVER["REMOTE_ADDR"]),
                     'raw_post_data' => file_get_contents('php://input'),
                 ];
+                // 保存実行
                 $result = save_data($id_data, $log_data);
+                // レスポンス
                 if ($result==true) {
                     echo "Data saved." . PHP_EOL;
                     echo "Data ID/key was: ${id_data}/${timestamp}" . PHP_EOL;
