@@ -322,18 +322,21 @@ if (IS_PROC_REGULAR) {
 
             // トゥートのパラメーター設定（返信投稿）
             $params = [
-                'domain'         => $keys_api['domain'],
-                'access_token'   => $keys_api['access_token'],
-                'force_update'   => false,
+                'domain'       => $keys_api['domain'],
+                'access_token' => $keys_api['access_token'],
+                'use_cash'     => false,
             ];
 
             $result_api = run_script('system/get-mastodon-user-info', $params, false);
             $result     = decode_api_to_array($result_api);
+
+            // リクエスト結果の表示
             if (isset($result['result']) && $result['result']=='OK') {
-                // リクエスト結果の表示
+                echo 'OK<br>' . PHP_EOL;
                 echo_on_debug(json_decode($result['value'], JSON_OBJECT_AS_ARRAY));
             } else {
-                echo 'Request error';
+                echo 'Request error<br>' . PHP_EOL;
+                echo_on_debug(json_decode($result['value'], JSON_OBJECT_AS_ARRAY));
             }
 
 
@@ -447,6 +450,7 @@ function get_lang_type($dir_name)
             $result_lang = $lang;
             break;
         } else {
+            debug_msg("Can't determine extension type. File not exist at '${path_basic}'.");
             $result_lang = false;
         }
     }
