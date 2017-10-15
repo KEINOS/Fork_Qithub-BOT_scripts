@@ -125,8 +125,8 @@ if (is_requirement_complied($arg)) {
         /**
          * 取得情報の保存（キャッシュ実行）
          */
-        // BOT のアカウントIDを保存
         if ($is_self_account) {
+            // BOT のアカウントIDを保存
             file_put_contents($path_file_data_bot, serialize($id_target));
         }
         // 取得したアカウントの情報を保存
@@ -144,8 +144,9 @@ if (is_requirement_complied($arg)) {
         'value'  => $result_json,
     ]);
 
-// 必須項目が足りない場合の処理
 } else {
+
+    // 必須項目が足りない場合の処理
     $temp = print_r($arg, true);
 
     die(encode_array_to_api([
@@ -156,6 +157,7 @@ if (is_requirement_complied($arg)) {
 
 
 die();
+
 /* ---------------------------------------------------------------------
     Functions
    --------------------------------------------------------------------- */
