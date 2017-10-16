@@ -127,6 +127,10 @@ if (IS_PROC_REGULAR) {
 
             break;
 
+        // BOT のトリガーテスト（プロセス）の動作サンプル
+        //
+        // 基本スクリプトでデータ保存・読み込みを行う。データの保存自体
+        // は'system/data-io' をラッパー関数で利用する例。
         case 'sample':
             // サンプルデータのデータID
             $id_data = 'sample';
@@ -143,6 +147,12 @@ if (IS_PROC_REGULAR) {
             print_r($result);
             break;
 
+        // 'plugins/say-hello-world' を利用したサンプル
+        //
+        // 'system/data-io','system/delete-toot','system/post-toot'の
+        // ラッパー関数を使って、前回トゥートしたトゥートを削除し、
+        // 'say-hello-world'プラグインより取得したメッセージを新規トゥー
+        // トする。
         case 'say-hello-world':
             // トゥートIDの保存キー（データID）
             $id_data = 'last-toot-id_say-hello-world';
@@ -199,6 +209,12 @@ if (IS_PROC_REGULAR) {
 
             break;
 
+        // Qiita記事の新着N件を表示するサンプル
+        //
+        // クエリのパラメーター'max_items'が指定されている場合はその件数
+        // ぶん、未指定の場合はデフォルトの5件が表示される。専用のラッパー
+        // を作らず汎用的な呼び出し方法で 'system/get-qiita-new-items'を
+        // 利用するサンプル
         case 'get-qiita-new-items':
             if (isset($_GET['max_items'])) {
                 $max_items = (int) $_GET['max_items'];
@@ -219,6 +235,13 @@ if (IS_PROC_REGULAR) {
 
             break;
 
+        // 日付ごとのスレッドでトゥートするサンプル
+        //
+        // 定例処理用のプロトタイプ。トゥートした日付の初トゥートの場合
+        // は普通にトゥート（親トゥート）し、以降の同日トゥートは返信で
+        // トゥート（子トゥート）します。
+        // 子トゥートは親に対しての返信でなく、１つ前のトゥートに対して
+        // 返信される。（トゥートクリック時にスレッド内容がわかるように）
         case 'toot-daily':
             // トゥートに必要なAPIの取得
             $keys_api = get_api_keys('../../qithub.conf.json', 'qiitadon');
@@ -321,7 +344,13 @@ if (IS_PROC_REGULAR) {
             }
 
             break;
-
+        
+        // マストドンのユーザーアカウントおよびフォロワーの情報を表示する
+        //
+        // 一度取得した情報はキャッシュされる。パラメータ'use_cash' に
+        // `false` が指定されていた場合は新規取得（更新）される。
+        // パラメーター 'id' にユーザーID が指定されていた場合は、その
+        // ユーザーおよびフォロワーの情報が表示される。
         case 'get-mastodon-user-info':
             // Returns the authenticated user's Account information.
             // Mastodon API に必要なキーの取得
