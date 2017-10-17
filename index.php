@@ -345,7 +345,7 @@ if (IS_PROC_REGULAR) {
             }
 
             break;
-        
+
         // マストドンのユーザーアカウントおよびフォロワーの情報を表示する
         //
         // 一度取得した情報はキャッシュされる。リクエスト・パラメータ
@@ -372,27 +372,27 @@ if (IS_PROC_REGULAR) {
                 'domain'       => $keys_api['domain'],
                 'access_token' => $keys_api['access_token'],
             ];
-            
+
             // オプション・パラメーターの追加
-            if(isset($_GET['id']) && is_numeric($_GET['id'])){
+            if (isset($_GET['id']) && is_numeric($_GET['id'])) {
                 $params   = $params + ['id' => (int) $_GET['id']];
             }
-            if(isset($_GET['use_cash']) && ! empty($_GET['use_cash'])){
+            if (isset($_GET['use_cash']) && ! empty($_GET['use_cash'])) {
                 $use_cash = ('false' !== strtolower($_GET['use_cash']));
-                $params   = $params + ['use_cash' => $use_cash];                
+                $params   = $params + ['use_cash' => $use_cash];
             }
-            
+
             // マストドンのユーザー＆フォロワー情報取得（API経由）
             $result_api = run_script('system/get-mastodon-user-info', $params, false);
             $result     = decode_api_to_array($result_api);
 
             // リクエスト結果の表示
             if (isset($result['result']) && 'OK' == $result['result']) {
-                if(IS_MODE_DEBUG){
+                if (IS_MODE_DEBUG) {
                     // 配列形式で出力（デバッグ確認用）
                     echo 'OK' . BR_EOL;
-                    echo_on_debug(json_decode($result['value'], JSON_OBJECT_AS_ARRAY));                    
-                }else{
+                    echo_on_debug(json_decode($result['value'], JSON_OBJECT_AS_ARRAY));
+                } else {
                     // JSON形式で出力
                     echo $result['value'];
                 }
@@ -706,14 +706,14 @@ function delete_data($id_data)
  * with function.
  *
  * 定数の文字列内展開用関数
- * 
+ *
  * @access public
  * @param mixed $v
  * @return mixed
  */
 function with($v)
 {
-  return $v;
+    return $v;
 }
 $with = "with";
 
