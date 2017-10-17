@@ -25,6 +25,7 @@ define('IS_MODE_DEBUG', isset($_GET['mode']) and ($_GET['mode'] == 'debug'));
 define('IS_PROC_REGULAR', ! isset($_GET['process'])); // 定例処理
 define('IS_PROC_DEMAND', isset($_GET['process']));    // 随時処理
 define('DIR_SEP', DIRECTORY_SEPARATOR);
+define('BR_EOL', '<br>' . PHP_EOL);
 define('LOAD_DATA_EMPTY', false);
 define('SAVE_DATA_SUCCESS', true);
 define('SAVE_DATA_FAIL', false);
@@ -334,47 +335,71 @@ if (IS_PROC_REGULAR) {
                  */
                 $result_save = save_data($id_data, $info_toot_to_save);
                 if ($result_save == SAVE_DATA_SUCCESS) {
-                    echo "Toot info saved.<br>" . PHP_EOL;
+                    echo "Toot info saved." . BR_EOL;
                 }
                 echo ($is_new_toot) ? "New toot " : "Reply toot ";
-                echo " posted successfuly.<br>\n";
+                echo " posted successfuly." . BR_EOL;
                 print_r($info_toot_to_save);
             } else {
-                echo "Toot fail.<br>\n";
+                echo "Toot fail." . BR_EOL;
             }
 
             break;
         
         // マストドンのユーザーアカウントおよびフォロワーの情報を表示する
         //
-        // 一度取得した情報はキャッシュされる。パラメータ'use_cash' に
-        // `false` が指定されていた場合は新規取得（更新）される。
-        // パラメーター 'id' にユーザーID が指定されていた場合は、その
-        // ユーザーおよびフォロワーの情報が表示される。
+        // 一度取得した情報はキャッシュされる。リクエスト・パラメータ
+        // 'use_cash' に `false` が指定されていた場合は新規取得（更新）
+        // される。
+        // パラメーター 'id' にユーザーID が指定されていた場合は、そのユー
+        // ザーおよびフォロワーの情報が表示される。
+        // また、'id', 'use_cash', 'mode'のオプション・パラメータは本体
+        // スクリプトのURLクエリと連動しており以下のように受け取ることが
+        // できる。
+        //
+        //   BOT のアカウントを取得する例（JSON形式）
+        //       /qithub/?process=get-mastodon-user-info
+        //   BOT のアカウントを取得する例（デバッグモード,配列表示）
+        //       /qithub/?process=get-mastodon-user-info&mode=debug
+        //   指定したユーザーのアカウントを取得する例
+        //       /qithub/?process=get-mastodon-user-info&id=3835
         case 'get-mastodon-user-info':
-            // Returns the authenticated user's Account information.
             // Mastodon API に必要なキーの取得
             $keys_api = get_api_keys('../../qithub.conf.json', 'qiitadon');
 
-            // トゥートのパラメーター設定（返信投稿）
+            // 基本のパラメーター設定
             $params = [
                 'domain'       => $keys_api['domain'],
                 'access_token' => $keys_api['access_token'],
-                'use_cash'     => false,
             ];
-
+            
+            // オプション・パラメーターの追加
+            if(isset($_GET['id']) && is_numeric($_GET['id'])){
+                $params   = $params + ['id' => (int) $_GET['id']];
+            }
+            if(isset($_GET['use_cash']) && ! empty($_GET['use_cash'])){
+                $use_cash = ('false' !== strtolower($_GET['use_cash']));
+                $params   = $params + ['use_cash' => $use_cash];                
+            }
+            
+            // マストドンのユーザー＆フォロワー情報取得（API経由）
             $result_api = run_script('system/get-mastodon-user-info', $params, false);
             $result     = decode_api_to_array($result_api);
 
             // リクエスト結果の表示
-            if (isset($result['result']) && $result['result']=='OK') {
-                echo 'OK<br>' . PHP_EOL;
-                echo_on_debug(json_decode($result['value'], JSON_OBJECT_AS_ARRAY));
+            if (isset($result['result']) && 'OK' == $result['result']) {
+                if(IS_MODE_DEBUG){
+                    // 配列形式で出力（デバッグ確認用）
+                    echo 'OK' . BR_EOL;
+                    echo_on_debug(json_decode($result['value'], JSON_OBJECT_AS_ARRAY));                    
+                }else{
+                    // JSON形式で出力
+                    echo $result['value'];
+                }
             } else {
-                echo 'Request error<br>' . PHP_EOL;
+                echo 'Request error' . BR_EOL;
                 echo_on_debug(json_decode($result['value'], JSON_OBJECT_AS_ARRAY));
             }
-
 
             break;
 
@@ -625,7 +650,7 @@ function load_data($id_data)
     if ($result['result'] == 'OK') {
         return $result['value'];
     } else {
-        debug_msg("【読み込みエラー】Data ID：'${id_data}' でのデータ読み込み時にエラーが発生しました。<br>\n【エラー内容】${result['value']}");
+        debug_msg("【読み込みエラー】Data ID：'${id_data}' でのデータ読み込み時にエラーが発生しました。{BR_EOL}【エラー内容】${result['value']}");
         return LOAD_DATA_EMPTY;
     }
 }
@@ -675,13 +700,31 @@ function delete_data($id_data)
 /* ---------------------------------
     環境／その他 Functions
    --------------------------------- */
+
+
+/**
+ * with function.
+ *
+ * 定数の文字列内展開用関数
+ * 
+ * @access public
+ * @param mixed $v
+ * @return mixed
+ */
+function with($v)
+{
+  return $v;
+}
+$with = "with";
+
 function debug_msg($str)
 {
+    $with = "with";
     if (IS_MODE_DEBUG) {
         $line = debug_backtrace()[1]['line'];
         //$line = print_r(debug_backtrace(),true);
         trigger_error(
-            "${str}【呼び出し元】 ${line}行<br>\n",
+            "${str}【呼び出し元】 ${line}行{$with(BR_EOL)}",
             E_USER_WARNING
         );
     }
@@ -691,11 +734,11 @@ function echo_on_debug($expression)
 {
     if (IS_MODE_DEBUG) {
         if (is_string($expression)) {
-            echo "<pre>${expression}</pre>\n";
+            echo "<pre>${expression}</pre>" . PHP_EOL;
         } else {
             echo '<pre>';
             print_r($expression);
-            echo "</pre>\n";
+            echo "</pre>" . PHP_EOL;
         }
     }
 }
