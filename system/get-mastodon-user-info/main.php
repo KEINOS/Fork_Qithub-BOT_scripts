@@ -210,6 +210,7 @@ function get_api_input_as_json()
  *
  * @access public
  * @return void
+ * @SuppressWarnings(PHPMD)
  */
 function get_stdin_first_arg()
 {
@@ -217,9 +218,7 @@ function get_stdin_first_arg()
 
     // 引数１は必須
     if (empty($argv[1])) {
-        /* @SuppressWarnings */
         print_r($argv);
-        /* @SuppressWarnings */
         die("Argument is empty.");
     }
 
@@ -241,7 +240,7 @@ function get_stdin_first_arg()
  * @access public
  * @param string $timezone (default: 'Asia/Tokyo')
  * @return void
- * @SuppressWarnings
+ * @SuppressWarnings(PHPMD)
  */
 function set_utf8_ja($timezone = 'Asia/Tokyo')
 {

@@ -755,7 +755,7 @@ function debug_msg($str)
  * @access public
  * @param  mixed  $expression
  * @return void
- * @SuppressWarnings
+ * @SuppressWarnings(PHPMD)
  */
 function echo_on_debug($expression)
 {
@@ -775,6 +775,7 @@ function echo_on_debug($expression)
  *
  * @param  string  $timezone デフォルトは東京
  * @return
+ * @SuppressWarnings(PHPMD)
  */
 function set_utf8_ja($timezone = 'Asia/Tokyo')
 {
