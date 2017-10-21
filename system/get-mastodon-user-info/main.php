@@ -1,10 +1,10 @@
 <?php
-/**
- * マストドンのユーザー情報を返します
+/* =====================================================================
+ *  マストドンのユーザー情報を返します
  *
  *
  *
- * 【このスクリプトの Qithub API パラメーター】
+ *【このスクリプトの Qithub API パラメーター】
  *
  * ■受け取り必須項目
  *   必須項目
@@ -24,7 +24,7 @@
  *     'value'  => json   'account'キーと'followers'キーの値に各々Mastodon
  *                        からのレスポンス内容をJSONのまま入れて返します。
  *
- */
+   ===================================================================== */
 
 /* =====================================================================
     Main
@@ -210,7 +210,6 @@ function get_api_input_as_json()
  *
  * @access public
  * @return void
- * @SuppressWarnings
  */
 function get_stdin_first_arg()
 {
@@ -218,7 +217,9 @@ function get_stdin_first_arg()
 
     // 引数１は必須
     if (empty($argv[1])) {
+        /* @SuppressWarnings */
         print_r($argv);
+        /* @SuppressWarnings */
         die("Argument is empty.");
     }
 
