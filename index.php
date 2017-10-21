@@ -13,6 +13,7 @@ error_reporting(E_ALL);
  * @php version >=5.4.45
  */
 
+
 /* =====================================================================
     初期設定
    ===================================================================== */
@@ -25,6 +26,7 @@ define('IS_MODE_DEBUG', isset($_GET['mode']) and ($_GET['mode'] == 'debug'));
 define('IS_PROC_REGULAR', ! isset($_GET['process'])); // 定例処理
 define('IS_PROC_DEMAND', isset($_GET['process']));    // 随時処理
 define('DIR_SEP', DIRECTORY_SEPARATOR);
+define('BR_EOL', '<br>' . PHP_EOL);
 define('LOAD_DATA_EMPTY', false);
 define('SAVE_DATA_SUCCESS', true);
 define('SAVE_DATA_FAIL', false);
@@ -54,8 +56,11 @@ if (IS_PROC_REGULAR) {
    --------------------------------- */
     switch (strtolower($_GET['process'])) {
         // GitHub からの WebHook 処理
+        // クエリの'method'オプションが指定されていない場合は受け取った
+        // データを保存。'method'オプションによって保存データの閲覧・削
+        // 除を行う
         case 'github':
-            // WebHook からのデータ保存キー（データID）
+            // データを保存するキー（データID）
             $id_data = 'WebHook-GitHub';
 
             // 保存済みデータの読み込み
@@ -65,11 +70,12 @@ if (IS_PROC_REGULAR) {
             }
 
             // ログの操作（view, delete）
+            // 'method'オプションによる保存データの扱い
             if (isset($_GET['method'])) {
                 switch ($_GET['method']) {
-                    // ログの一部削除（ログのキー）
+                    // ログの一部削除
+                    // ログのキー（=タイムスタンプ）を指定して削除
                     case 'delete':
-                        // 削除するログのキーを取得
                         $key_to_delete = $_GET['key'];
                         // 削除の実行（データのアップデート）
                         if (isset($log_data[$key_to_delete])) {
@@ -84,7 +90,7 @@ if (IS_PROC_REGULAR) {
                             print_r($log_data);
                             echo '</pre>' . PHP_EOL;
                         } else {
-                            echo "id ありません";
+                            echo "削除するデータのキーが指定されていません。";
                         }
                         break;
 
@@ -99,10 +105,11 @@ if (IS_PROC_REGULAR) {
                 }
                 die();
 
-            // ログ（WebHook からのデータ）の保存
+            // WebHook からの受け取りデータの保存
             } else {
-                // GitHub からの POST データ（WebHook 内容）の追加保存
+                // データの保存キー
                 $timestamp = date("Ymd-His");
+                // データの作成
                 $log_data[$timestamp] = [
                     'getallheaders' => getallheaders(),
                     'get'           => $_GET,
@@ -111,7 +118,9 @@ if (IS_PROC_REGULAR) {
                     'host'          => gethostbyaddr($_SERVER["REMOTE_ADDR"]),
                     'raw_post_data' => file_get_contents('php://input'),
                 ];
+                // 保存実行
                 $result = save_data($id_data, $log_data);
+                // レスポンス
                 if ($result==true) {
                     echo "Data saved." . PHP_EOL;
                     echo "Data ID/key was: ${id_data}/${timestamp}" . PHP_EOL;
@@ -120,6 +129,10 @@ if (IS_PROC_REGULAR) {
 
             break;
 
+        // BOT のトリガーテスト（プロセス）の動作サンプル
+        //
+        // 基本スクリプトでデータ保存・読み込みを行う。データの保存自体
+        // は'system/data-io' をラッパー関数で利用する例。
         case 'sample':
             // サンプルデータのデータID
             $id_data = 'sample';
@@ -136,6 +149,12 @@ if (IS_PROC_REGULAR) {
             print_r($result);
             break;
 
+        // 'plugins/say-hello-world' を利用したサンプル
+        //
+        // 'system/data-io','system/delete-toot','system/post-toot'の
+        // ラッパー関数を使って、前回トゥートしたトゥートを削除し、
+        // 'say-hello-world'プラグインより取得したメッセージを新規トゥー
+        // トする。
         case 'say-hello-world':
             // トゥートIDの保存キー（データID）
             $id_data = 'last-toot-id_say-hello-world';
@@ -192,6 +211,12 @@ if (IS_PROC_REGULAR) {
 
             break;
 
+        // Qiita記事の新着N件を表示するサンプル
+        //
+        // クエリのパラメーター'max_items'が指定されている場合はその件数
+        // ぶん、未指定の場合はデフォルトの5件が表示される。専用のラッパー
+        // を作らず汎用的な呼び出し方法で 'system/get-qiita-new-items'を
+        // 利用するサンプル
         case 'get-qiita-new-items':
             if (isset($_GET['max_items'])) {
                 $max_items = (int) $_GET['max_items'];
@@ -212,6 +237,13 @@ if (IS_PROC_REGULAR) {
 
             break;
 
+        // 日付ごとのスレッドでトゥートするサンプル
+        //
+        // 定例処理用のプロトタイプ。トゥートした日付の初トゥートの場合
+        // は普通にトゥート（親トゥート）し、以降の同日トゥートは返信で
+        // トゥート（子トゥート）します。
+        // 子トゥートは親に対しての返信でなく、１つ前のトゥートに対して
+        // 返信される。（トゥートクリック時にスレッド内容がわかるように）
         case 'toot-daily':
             // トゥートに必要なAPIの取得
             $keys_api = get_api_keys('../../qithub.conf.json', 'qiitadon');
@@ -221,9 +253,9 @@ if (IS_PROC_REGULAR) {
 
             // トゥート済みのトゥートIDと日付を取得
             $info_toot = load_data($id_data);
-            
+
             // 今日の日付を取得
-            $id_date = (int) date('Ymd');            
+            $id_date = (int) date('Ymd');
 
             // トゥートIDの初期化
             $id_toot_current  = ''; // １つ前のトゥートID
@@ -236,7 +268,6 @@ if (IS_PROC_REGULAR) {
                 // トゥートIDの取得
                 $id_toot_current  = $info_toot['id_toot_current'];
                 $id_toot_original = $info_toot['id_toot_original'];
-
             } else {
                 // 本日の初トゥートフラグ
                 $is_new_toot = true;
@@ -263,10 +294,10 @@ if (IS_PROC_REGULAR) {
                 // タイムスタンプの偶数・奇数でメッセージを変更
                 // 後日実装予定の新着Qiita記事がフォロワーの場合に備えて
                 // の準備として
-                if($timestamp % 2 == 0){
+                if ($timestamp % 2 == 0) {
                     $msg_branch = "偶数だにゃーん\n\n";
-                }else{
-                    $msg_branch = "奇数だにゃーん\n\n";                    
+                } else {
+                    $msg_branch = "奇数だにゃーん\n\n";
                 }
                 // トゥート内容の作成
                 $date_today = date('Y/m/d H:i:s', $timestamp);
@@ -284,12 +315,12 @@ if (IS_PROC_REGULAR) {
                 ];
             }
             // トゥートの実行
-            $result_toot = post_toot( $params );
+            $result_toot = post_toot($params);
 
             // トゥート結果の表示とトゥートID＆今日の日付を保存
-            if($result_toot == TOOT_SUCCESS){
+            if ($result_toot == TOOT_SUCCESS) {
                 // トゥートIDの取得
-                $id_toot_current = json_decode($result_toot['value'], JSON_OBJECT_AS_ARRAY)['id'];                
+                $id_toot_current = json_decode($result_toot['value'], JSON_OBJECT_AS_ARRAY)['id'];
                 // 親トゥートのID取得
                 $id_toot_original = ($is_new_toot) ? $id_toot_current : $id_toot_original;
                 // 保存するデータ
@@ -305,13 +336,70 @@ if (IS_PROC_REGULAR) {
                  */
                 $result_save = save_data($id_data, $info_toot_to_save);
                 if ($result_save == SAVE_DATA_SUCCESS) {
-                    echo "Toot info saved.<br>" . PHP_EOL;
+                    echo "Toot info saved." . BR_EOL;
                 }
                 echo ($is_new_toot) ? "New toot " : "Reply toot ";
-                echo " posted successfuly.<br>\n";
+                echo " posted successfuly." . BR_EOL;
                 print_r($info_toot_to_save);
-            }else{
-                echo "Toot fail.<br>\n";
+            } else {
+                echo "Toot fail." . BR_EOL;
+            }
+
+            break;
+
+        // マストドンのユーザーアカウントおよびフォロワーの情報を表示する
+        //
+        // 一度取得した情報はキャッシュされる。リクエスト・パラメータ
+        // 'use_cash' に `false` が指定されていた場合は新規取得（更新）
+        // される。
+        // パラメーター 'id' にユーザーID が指定されていた場合は、そのユー
+        // ザーおよびフォロワーの情報が表示される。
+        // また、'id', 'use_cash', 'mode'のオプション・パラメータは本体
+        // スクリプトのURLクエリと連動しており以下のように受け取ることが
+        // できる。
+        //
+        //   BOT のアカウントを取得する例（JSON形式）
+        //       /qithub/?process=get-mastodon-user-info
+        //   BOT のアカウントを取得する例（デバッグモード,配列表示）
+        //       /qithub/?process=get-mastodon-user-info&mode=debug
+        //   指定したユーザーのアカウントを取得する例
+        //       /qithub/?process=get-mastodon-user-info&id=3835
+        case 'get-mastodon-user-info':
+            // Mastodon API に必要なキーの取得
+            $keys_api = get_api_keys('../../qithub.conf.json', 'qiitadon');
+
+            // 基本のパラメーター設定
+            $params = [
+                'domain'       => $keys_api['domain'],
+                'access_token' => $keys_api['access_token'],
+            ];
+
+            // オプション・パラメーターの追加
+            if (isset($_GET['id']) && is_numeric($_GET['id'])) {
+                $params   = $params + ['id' => (int) $_GET['id']];
+            }
+            if (isset($_GET['use_cash']) && ! empty($_GET['use_cash'])) {
+                $use_cash = ('false' !== strtolower($_GET['use_cash']));
+                $params   = $params + ['use_cash' => $use_cash];
+            }
+
+            // マストドンのユーザー＆フォロワー情報取得（API経由）
+            $result_api = run_script('system/get-mastodon-user-info', $params, false);
+            $result     = decode_api_to_array($result_api);
+
+            // リクエスト結果の表示
+            if (isset($result['result']) && 'OK' == $result['result']) {
+                if (IS_MODE_DEBUG) {
+                    // 配列形式で出力（デバッグ確認用）
+                    echo 'OK' . BR_EOL;
+                    echo_on_debug(json_decode($result['value'], JSON_OBJECT_AS_ARRAY));
+                } else {
+                    // JSON形式で出力
+                    echo $result['value'];
+                }
+            } else {
+                echo 'Request error' . BR_EOL;
+                echo_on_debug(json_decode($result['value'], JSON_OBJECT_AS_ARRAY));
             }
 
             break;
@@ -424,6 +512,7 @@ function get_lang_type($dir_name)
             $result_lang = $lang;
             break;
         } else {
+            debug_msg("Can't determine extension type. File not exist at '${path_basic}'.");
             $result_lang = false;
         }
     }
@@ -562,7 +651,12 @@ function load_data($id_data)
     if ($result['result'] == 'OK') {
         return $result['value'];
     } else {
-        debug_msg("【読み込みエラー】Data ID：'${id_data}' でのデータ読み込み時にエラーが発生しました。<br>\n【エラー内容】${result['value']}");
+        $msg_error =<<<EOL
+【読み込みエラー】
+Data ID：'${id_data}' でのデータ読み込み時にエラーが発生しました。<br>
+【エラー内容】${result['value']}
+EOL;
+        debug_msg($msg_error);
         return LOAD_DATA_EMPTY;
     }
 }
@@ -610,17 +704,69 @@ function delete_data($id_data)
 }
 
 /* ---------------------------------
-    環境／その他 Functions
+    環境／デバッグ用／その他 Functions
    --------------------------------- */
+
+
+/**
+ * with function.
+ *
+ * 定数の文字列内展開用関数
+ *
+ * @access public
+ * @param mixed $v
+ * @return mixed
+ */
+function with($v)
+{
+    return $v;
+}
+$with = "with";
+
+/**
+ * debug_msg function.
+ *
+ * デバッグモード（IS_MODE_DEBUG = true）時のみ、try, catchできるエラー
+ * （E_USER_WARNING）出力関数。エラー発生元の取得も行う。
+ *
+ * @access public
+ * @param mixed $str
+ * @return void
+ */
 function debug_msg($str)
 {
+    $with = "with";
     if (IS_MODE_DEBUG) {
         $line = debug_backtrace()[1]['line'];
         //$line = print_r(debug_backtrace(),true);
         trigger_error(
-            "${str}【呼び出し元】 ${line}行<br>\n",
+            "${str}【呼び出し元】 ${line}行{$with(BR_EOL)}",
             E_USER_WARNING
         );
+    }
+}
+
+/**
+ * echo_on_debug function.
+ *
+ * デバッグモード（IS_MODE_DEBUG = true）時のみ echo/print_r を返す関数。
+ * 主にテスト動作で引数をチェックするなどに利用する。
+ *
+ * @access public
+ * @param  mixed  $expression
+ * @return void
+ * @SuppressWarnings(PHPMD)
+ */
+function echo_on_debug($expression)
+{
+    if (IS_MODE_DEBUG) {
+        if (is_string($expression)) {
+            echo "<pre>${expression}</pre>" . PHP_EOL;
+        } else {
+            echo '<pre>';
+            print_r($expression);
+            echo "</pre>" . PHP_EOL;
+        }
     }
 }
 
@@ -629,6 +775,7 @@ function debug_msg($str)
  *
  * @param  string  $timezone デフォルトは東京
  * @return
+ * @SuppressWarnings(PHPMD)
  */
 function set_utf8_ja($timezone = 'Asia/Tokyo')
 {
