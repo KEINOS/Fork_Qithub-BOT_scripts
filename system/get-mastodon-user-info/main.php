@@ -1,4 +1,5 @@
 <?php
+
 /**
  * マストドンのユーザー情報を返します
  *
@@ -202,9 +203,18 @@ function get_api_input_as_json()
     return urldecode(get_stdin_first_arg());
 }
 
+/**
+ * get_stdin_first_arg function.
+ *
+ * CLIからの標準入力を取得。必須条件の第一引数を満たしていない場合は、余
+ * 計な処理を避ける為、強制終了。
+ * 
+ * @access public
+ * @return void
+ * @SuppressWarnings
+ */
 function get_stdin_first_arg()
 {
-    // CLIからの標準入力を取得
     global $argv;
 
     // 引数１は必須
@@ -221,7 +231,17 @@ function get_stdin_first_arg()
    ------------------------------------------------------------------ */
 
 /**
- * Set language to Japanese UTF-8 and Time zone to Japan
+ * set_utf8_ja function.
+ *
+ * 日本語環境を大前提としたシステムなので、マルチバイト対応していない場
+ * は余計な処理をさせないために強制終了。
+ * 対応している場合は、日本語（UTF-8）の設定と、タイムゾーンを設定する。
+ * （デフォルトタイムゾーン=東京, 日本）
+ * 
+ * @access public
+ * @param string $timezone (default: 'Asia/Tokyo')
+ * @return void
+ * @SuppressWarnings
  */
 function set_utf8_ja($timezone = 'Asia/Tokyo')
 {
