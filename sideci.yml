@@ -1,8 +1,8 @@
 linter:
   rubocop:
-    root_dir: 'system'
+    root_dir: 'system/get-mastodon-user-info'
 
   phpmd:
-    root_dir: 'system'
+    root_dir: 'system/get-mastodon-user-info'
     options:
       rule: 'phpmd.xml'
