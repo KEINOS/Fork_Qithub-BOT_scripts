@@ -1,5 +1,4 @@
 <?php
-
 /**
  * マストドンのユーザー情報を返します
  *
@@ -208,7 +207,7 @@ function get_api_input_as_json()
  *
  * CLIからの標準入力を取得。必須条件の第一引数を満たしていない場合は、余
  * 計な処理を避ける為、強制終了。
- * 
+ *
  * @access public
  * @return void
  * @SuppressWarnings
@@ -237,7 +236,7 @@ function get_stdin_first_arg()
  * は余計な処理をさせないために強制終了。
  * 対応している場合は、日本語（UTF-8）の設定と、タイムゾーンを設定する。
  * （デフォルトタイムゾーン=東京, 日本）
- * 
+ *
  * @access public
  * @param string $timezone (default: 'Asia/Tokyo')
  * @return void
