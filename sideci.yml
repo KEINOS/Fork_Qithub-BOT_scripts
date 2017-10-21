@@ -4,5 +4,3 @@ linter:
 
   phpmd:
     root_dir: 'system/get-mastodon-user-info'
-    options:
-      rule: 'phpmd.xml'
