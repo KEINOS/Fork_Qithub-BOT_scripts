@@ -31,10 +31,7 @@
    ===================================================================== */
 
 // 定数
-define('DIR_NAME_DATA', 'data');
-define('DIR_SEP', DIRECTORY_SEPARATOR);
-define('YES', true);
-define('NO', false);
+include_once('./constants.php.inc');
 
 // UTF-8, TIMEZONEを日本仕様に設定
 set_utf8_ja('Asia/Tokyo');
