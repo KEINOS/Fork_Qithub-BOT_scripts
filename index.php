@@ -13,6 +13,7 @@ error_reporting(E_ALL);
  * @php version >=5.4.45
  */
 
+
 /* =====================================================================
     初期設定
    ===================================================================== */
@@ -650,7 +651,12 @@ function load_data($id_data)
     if ($result['result'] == 'OK') {
         return $result['value'];
     } else {
-        debug_msg("【読み込みエラー】Data ID：'${id_data}' でのデータ読み込み時にエラーが発生しました。{BR_EOL}【エラー内容】${result['value']}");
+        $msg_error =<<<EOL
+【読み込みエラー】
+Data ID：'${id_data}' でのデータ読み込み時にエラーが発生しました。<br>
+【エラー内容】${result['value']}
+EOL;
+        debug_msg($msg_error);
         return LOAD_DATA_EMPTY;
     }
 }
