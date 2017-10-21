@@ -30,14 +30,14 @@
     Main
    ===================================================================== */
 
-// UTF-8, TIMEZONEを日本仕様に設定
-set_utf8_ja('Asia/Tokyo');
-
 // 定数
 define('DIR_NAME_DATA', 'data');
 define('DIR_SEP', DIRECTORY_SEPARATOR);
 define('YES', true);
 define('NO', false);
+
+// UTF-8, TIMEZONEを日本仕様に設定
+set_utf8_ja('Asia/Tokyo');
 
 // 標準入力を取得
 $arg = get_api_input_as_array();
