@@ -723,6 +723,16 @@ function with($v)
 }
 $with = "with";
 
+/**
+ * debug_msg function.
+ *
+ * デバッグモード（IS_MODE_DEBUG = true）時のみ、try, catchできるエラー
+ * （E_USER_WARNING）出力関数。エラー発生元の取得も行う。
+ * 
+ * @access public
+ * @param mixed $str
+ * @return void
+ */
 function debug_msg($str)
 {
     $with = "with";
@@ -736,6 +746,17 @@ function debug_msg($str)
     }
 }
 
+/**
+ * echo_on_debug function.
+ *
+ * デバッグモード（IS_MODE_DEBUG = true）時のみ echo/print_r を返す関数。
+ * 主にテスト動作で引数をチェックするなどに利用する。
+ * 
+ * @access public
+ * @param  mixed  $expression
+ * @return void
+ * @SuppressWarnings
+ */
 function echo_on_debug($expression)
 {
     if (IS_MODE_DEBUG) {
