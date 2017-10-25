@@ -347,7 +347,135 @@ if (IS_PROC_REGULAR) {
                 echo "Toot fail." . BR_EOL;
             }
 
-            break;
+            break; // EOF toot-daily
+
+        // 日付ごとのスレッドで新着Qiita記事をトゥートするサンプル
+        //
+        // 'toot-daily' プロセスを新着Qiita記事のトゥートにカスタムした
+        // プロトタイプ。
+        case 'toot-daily-qiita-items':
+            // トゥートに必要なAPIの取得
+            $keys_api = get_api_keys('../../qithub.conf.json', 'qiitadon');
+
+            // トゥート済みのトゥートIDとトゥート日の読み込み
+            $id_data_toot = 'toot_id_and_date_of_daily_toot';
+            $info_toot = load_data($id_data_toot);
+
+            // トゥート済みの新着Qiita記事の読み込み
+            $id_data_qiita   = 'qiita_id_tooted';
+            $qiita_items_old = load_data($id_data_qiita);
+            $qiita_items_old = ( $qiita_items_old == LOAD_DATA_EMPTY ) ? array() : $qiita_items_old;
+            
+            // 動作確認用の要素の削除
+            //unset($qiita_items_old['cf93b63acc8a313c88bb']);
+
+            // 最新の新着Qiita記事の取得とトゥート済みの比較（差分取得）
+            $max_items  = 10;
+            $result_api = run_script(
+                'system/get-qiita-new-items',
+                ['max_items' => $max_items],
+                false
+            );
+            $qiita_items_new = decode_api_to_array($result_api)['value'];
+            $qiita_items_diff = array_diff_key($qiita_items_new, $qiita_items_old);
+
+            // 今日の日付をトゥート日のIDとして取得
+            $id_date = (int) date('Ymd');
+
+            // トゥートIDの初期化
+            $id_toot_current  = ''; // １つ前のトゥートID
+            $id_toot_original = ''; // 親のトゥートID
+
+            // 本日の初トゥートが発動済みかのフラグ設定
+            // 発動済みの場合、親トゥートと最新（１つ前の）トゥートを取得
+            if ($info_toot !== LOAD_DATA_EMPTY) {
+                // 本日の初トゥートフラグ（保存日の比較）
+                $is_new_toot = ($info_toot['id_date'] !== $id_date);
+                // トゥートIDの取得
+                $id_toot_current  = $info_toot['id_toot_current'];
+                $id_toot_original = $info_toot['id_toot_original'];
+            } else {
+                // 本日の初トゥートフラグ
+                $is_new_toot = true;
+            }
+
+            // 新着Qiita記事のトゥート実行
+            //
+            // 本日のトゥート発信済みの場合は、１つ前のトゥートに返信。
+            // 未発信（本日初トゥート）の場合は、宣言トゥートを発信。
+            // 本稼働の場合、'visibility' は以下の挙動になる
+            //    初トゥート：public
+            //    
+            if ($is_new_toot) {
+                // トゥート内容の作成
+                $date_today = date('Y/m/d');
+                $msg =<<<EOL
+${date_today} の新着Qiita記事のトゥートを始めるよ！
+このトゥートに非公開でトゥートしていくから、興味がある人はフォローしてね。
+EOL;
+                // 本稼働の場合は 'unlisted' -> 'public' に変更
+                $visibility = 'unlisted';
+
+                // トゥートのパラメータ設定（新規投稿）
+                $params = [
+                    'status'       => $msg,
+                    'domain'       => $keys_api['domain'],
+                    'access_token' => $keys_api['access_token'],
+                    'visibility'   => $visibility,
+                ];
+                // トゥートの実行
+                $result_toot = post_toot($params);
+
+            } else {
+                // トゥート内容の作成
+                $date_today = date('Y/m/d H:i:s', $timestamp);
+                $msg  = $msg_branch;
+                $msg .= "Posted at :${date_today}\n";
+                $msg .= "In reply to :${id_toot_current}\n";
+
+                // 本稼働の場合は 'unlisted' -> 'public' に変更
+                $visibility = 'unlisted';
+
+                // トゥートのパラメーター設定（返信投稿）
+                $params = [
+                    'status'         => $msg,
+                    'domain'         => $keys_api['domain'],
+                    'access_token'   => $keys_api['access_token'],
+                    'in_reply_to_id' => $id_toot_current,
+                    'visibility'     => $visibility,
+                ];
+            }
+
+            // トゥート結果の表示とトゥートID＆今日の日付を保存
+            if ($result_toot == TOOT_SUCCESS) {
+                // トゥートIDの取得
+                $id_toot_current = json_decode($result_toot['value'], JSON_OBJECT_AS_ARRAY)['id'];
+                // 親トゥートのID取得
+                $id_toot_original = ($is_new_toot) ? $id_toot_current : $id_toot_original;
+                // 保存するデータ
+                $info_toot_to_save = [
+                    'id_toot_current'  => $id_toot_current,
+                    'id_toot_original' => $id_toot_original,
+                    'id_date'          => $id_date,
+                ];
+                // 今回のトゥートIDの保存（返信の場合はデイジーチェーン）
+                /**
+                 * @todo デイジーチェーンの場合、途中でトゥートがスパム
+                 *        Qiita記事だったなどで削除された場合にチェーン
+                 *        が切れてしまう。チェックしてからトゥート？
+                 */
+                $result_save = save_data($id_data_toot, $info_toot_to_save);
+                if ($result_save == SAVE_DATA_SUCCESS) {
+                    echo "Toot info saved." . BR_EOL;
+                }
+                echo ($is_new_toot) ? "New toot " : "Reply toot ";
+                echo " posted successfuly." . BR_EOL;
+                print_r($info_toot_to_save);
+            } else {
+                echo "Toot fail." . BR_EOL;
+            }
+
+            break; //EOF toot-daily-qiita-items
 
         // マストドンのユーザーアカウントおよびフォロワーの情報を表示する
         //
