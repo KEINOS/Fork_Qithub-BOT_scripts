@@ -232,7 +232,9 @@ if (IS_PROC_REGULAR) {
             $result     = decode_api_to_array($result_api);
 
             if ($result['result']) {
+                echo '<pre>';
                 print_r($result);
+                echo '</pre>';
             }
 
             break;
