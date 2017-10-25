@@ -55,6 +55,9 @@ if (IS_PROC_REGULAR) {
     クエリの'process'値で分岐処理
    --------------------------------- */
     switch (strtolower($_GET['process'])) {
+
+        // 'github'
+        // -------------------------------------------------------------
         // GitHub からの WebHook 処理
         // クエリの'method'オプションが指定されていない場合は受け取った
         // データを保存。'method'オプションによって保存データの閲覧・削
@@ -129,6 +132,8 @@ if (IS_PROC_REGULAR) {
 
             break;
 
+        // 'sample'
+        // -------------------------------------------------------------
         // BOT のトリガーテスト（プロセス）の動作サンプル
         //
         // 基本スクリプトでデータ保存・読み込みを行う。データの保存自体
@@ -149,6 +154,8 @@ if (IS_PROC_REGULAR) {
             print_r($result);
             break;
 
+        // 'say-hello-world'
+        // -------------------------------------------------------------
         // 'plugins/say-hello-world' を利用したサンプル
         //
         // 'system/data-io','system/delete-toot','system/post-toot'の
@@ -211,6 +218,8 @@ if (IS_PROC_REGULAR) {
 
             break;
 
+        // 'get-qiita-new-items'
+        // -------------------------------------------------------------
         // Qiita記事の新着N件を表示するサンプル
         //
         // クエリのパラメーター'max_items'が指定されている場合はその件数
@@ -238,7 +247,9 @@ if (IS_PROC_REGULAR) {
             }
 
             break;
-
+        
+        // 'toot-daily'
+        // -------------------------------------------------------------
         // 日付ごとのスレッドでトゥートするサンプル
         //
         // 定例処理用のプロトタイプ。トゥートした日付の初トゥートの場合
@@ -349,8 +360,9 @@ if (IS_PROC_REGULAR) {
 
             break; // EOF toot-daily
 
+        // 'toot-daily-qiita-items'
+        // -------------------------------------------------------------
         // 日付ごとのスレッドで新着Qiita記事をトゥートするサンプル
-        //
         // 'toot-daily' プロセスを新着Qiita記事のトゥートにカスタムした
         // プロトタイプ。
         case 'toot-daily-qiita-items':
@@ -376,8 +388,13 @@ if (IS_PROC_REGULAR) {
                 ['max_items' => $max_items],
                 false
             );
-            $qiita_items_new = decode_api_to_array($result_api)['value'];
+            $qiita_items_new  = decode_api_to_array($result_api)['value'];
             $qiita_items_diff = array_diff_key($qiita_items_new, $qiita_items_old);
+            
+            echo "<pre>";
+            print_r($qiita_items_diff);
+            echo "</pre>";
+            die;
 
             // 今日の日付をトゥート日のIDとして取得
             $id_date = (int) date('Ymd');
@@ -399,10 +416,10 @@ if (IS_PROC_REGULAR) {
                 $is_new_toot = true;
             }
 
-            // 新着Qiita記事のトゥート実行
+            // 新着Qiita記事トゥートの開始宣言実行（親トゥート）
             //
-            // 本日のトゥート発信済みの場合は、１つ前のトゥートに返信。
-            // 未発信（本日初トゥート）の場合は、宣言トゥートを発信。
+            // 本日初のトゥートが未発信の場合は、宣言トゥートを発信。
+            // 親トゥートと直近トゥートのIDを設定
             // 本稼働の場合、'visibility' は以下の挙動になる
             //    初トゥート：public
             //    
@@ -425,33 +442,121 @@ EOL;
                 ];
                 // トゥートの実行
                 $result_toot = post_toot($params);
+                
+                if ($result_toot == TOOT_SUCCESS){
+                    $is_new_toot = false;
+                    // 親トゥート・直近トゥートのID設定
+                    $id_toot_original = json_decode($result_toot['value'], JSON_OBJECT_AS_ARRAY)['id'];
+                    $id_toot_current  = $id_toot_original;
+                }
 
-            } else {
-                // トゥート内容の作成
-                $date_today = date('Y/m/d H:i:s', $timestamp);
-                $msg  = $msg_branch;
-                $msg .= "Posted at :${date_today}\n";
-                $msg .= "In reply to :${id_toot_current}\n";
+            }
 
-                // 本稼働の場合は 'unlisted' -> 'public' に変更
-                $visibility = 'unlisted';
+            // 新着Qiita記事のトゥート開始（子トゥート）
+            //
+            // 親トゥートを元にスレッドで新着をトゥートしていく。返信は
+            // １つ前のトゥートにしていく。
+            // 
+            // 本稼働の場合、'visibility' は以下の挙動になる
+            //    初トゥート：public
 
-                // トゥートのパラメーター設定（返信投稿）
-                $params = [
-                    'status'         => $msg,
-                    'domain'         => $keys_api['domain'],
-                    'access_token'   => $keys_api['access_token'],
-                    'in_reply_to_id' => $id_toot_current,
-                    'visibility'     => $visibility,
-                ];
+            if (! $is_new_toot && ! empty($id_toot_current)) {
+                
+                // ユーザー名の正規化クロージャー
+                /** @todo これは関数にした方がいいかも */
+                $id_user_qiita = function($s){
+                    $s = trim($s);
+                
+                    /** @todo QiitaIDとQiitadonIDが違う人がいるので置き
+                              換えが必要。Note: BOTのフォロワー情報から
+                              QiitaIDは取得できる */
+                    $table = [
+                        'sample-user' => 'sample_user',
+                    ];
+                    $search  = array_keys($table);
+                    $replace = array_values($table);
+                
+                    /* Common replacement */
+                    $s = str_replace($search, $replace, $s);
+                    $s = str_replace('@github', '', $s);
+                    $s = str_replace('@', 'at', $s);
+                    $s = str_replace('.', '_', $s);
+                    $s = str_replace('.', '_', $s);
+                    $s = str_replace('-', '_', $s);
+                    
+                    return $s;
+                }
+                
+                // 新着の差分をループしてトゥート
+                foreach($qiita_items_diff as $item){
+
+                    // Qiita記事の情報取得
+                    $title = $item['title'];
+                    $url   = $item['url'];
+                    $tags  = '';
+                    foreach($item['tags'] as $tag){
+                        $s = $tag['name'];
+                        $s = str_replace('#', 'Sharp', $s);
+                        $s = str_replace('.', '', $s);
+                        $s = str_replace('-', '_', $s);
+                        $s = trim($s);
+
+                        $tags .= "#${s} ";
+                    }
+                    $tags = trim($tags);
+
+                    // トゥート内容の作成
+                    // Qiitadonユーザーの場合はメッセージ内容を変更
+                    //
+                    /** @todo BOTフォロワー、Qiitadonユーザーの判断
+                              BOTフォロワーなら未収載 */
+                    $id_user_qiita( $item['user']['id'] );
+                    $url = "https://qiitadon.com/@${id_user_qiita}";
+                    if(isValid_url($url)){
+                        $msg =<<<EOL
+${tags}
+
+@${id_user_qiita} さんがQiita記事を投稿しました。
+
+『${title}』
+${url}
+EOL;                        
+                    } else {
+                        $msg =<<<EOL
+${tags}
+
+新しいQiita記事が投稿されました。
+
+『${title}』 @${id_user_qiita}
+${url} 
+EOL;                        
+                        
+                    }
+                    
+                    // 返信トゥートの実行
+                    $visibility = 'unlisted';
+                    $params = [
+                        'status'         => $msg,
+                        'domain'         => $keys_api['domain'],
+                        'access_token'   => $keys_api['access_token'],
+                        'in_reply_to_id' => $id_toot_current,
+                        'visibility'     => $visibility,
+                    ];
+                    $result_toot = post_toot($params);
+
+                    if ($result_toot == TOOT_SUCCESS) {
+                        // トゥートIDの取得
+                        $id_toot_current = json_decode($result_toot['value'], JSON_OBJECT_AS_ARRAY)['id'];
+                    }
+                    
+                }
+                
             }
 
             // トゥート結果の表示とトゥートID＆今日の日付を保存
             if ($result_toot == TOOT_SUCCESS) {
                 // トゥートIDの取得
                 $id_toot_current = json_decode($result_toot['value'], JSON_OBJECT_AS_ARRAY)['id'];
-                // 親トゥートのID取得
-                $id_toot_original = ($is_new_toot) ? $id_toot_current : $id_toot_original;
                 // 保存するデータ
                 $info_toot_to_save = [
                     'id_toot_current'  => $id_toot_current,
@@ -477,6 +582,8 @@ EOL;
 
             break; //EOF toot-daily-qiita-items
 
+        // get-mastodon-user-info
+        // -------------------------------------------------------------
         // マストドンのユーザーアカウントおよびフォロワーの情報を表示する
         //
         // 一度取得した情報はキャッシュされる。リクエスト・パラメータ
@@ -833,6 +940,42 @@ function delete_data($id_data)
     }
 }
 
+
+/* ---------------------------------
+    バリデーション Functions
+   --------------------------------- */
+
+/**
+ * isValid_url function.
+ *
+ * 有効なURLかを返す。主にQiitadonユーザーが存在するかの確認に利用。
+ * 
+ * @access public
+ * @param mixed $sUrl
+ * @return void
+ */
+function isValid_url($sUrl)
+{
+    if (( $sResponce = @file_get_contents($sUrl) ) == false) {
+        // HTTPステータスコードを取得する
+        list($version,$status_code,$msg) = explode(' ', $http_response_header[0], 3);
+        // ステータスコードごとの処理
+        switch ($status_code) {
+            case 404:
+                //echo "404: Not found.";
+                return false;
+                break;
+            default:
+                //return "ERROR ${status_code}";
+                return false;
+                break;
+        }
+    } else {
+        //正常にfile_get_contentsで取得できた場合の処理
+        //echo "OK: {$sResponce}";
+        return true;
+    }
+}
 /* ---------------------------------
     環境／デバッグ用／その他 Functions
    --------------------------------- */
