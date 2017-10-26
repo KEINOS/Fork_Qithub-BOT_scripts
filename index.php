@@ -368,6 +368,8 @@ if (IS_PROC_REGULAR) {
         case 'toot-daily-qiita-items':
             // トゥートに必要なAPIの取得
             $keys_api = get_api_keys('../../qithub.conf.json', 'qiitadon');
+            $domain       = $keys_api['domain'];
+            $access_token = $keys_api['access_token'];
 
             // トゥート済みのトゥートIDとトゥート日の読み込み
             $id_data_toot = 'toot_id_and_date_of_daily_toot';
@@ -391,11 +393,6 @@ if (IS_PROC_REGULAR) {
             $qiita_items_new  = decode_api_to_array($result_api)['value'];
             $qiita_items_diff = array_diff_key($qiita_items_new, $qiita_items_old);
             
-            echo "<pre>";
-            print_r($qiita_items_diff);
-            echo "</pre>";
-            die;
-
             // 今日の日付をトゥート日のIDとして取得
             $id_date = (int) date('Ymd');
 
@@ -436,8 +433,8 @@ EOL;
                 // トゥートのパラメータ設定（新規投稿）
                 $params = [
                     'status'       => $msg,
-                    'domain'       => $keys_api['domain'],
-                    'access_token' => $keys_api['access_token'],
+                    'domain'       => $domain,
+                    'access_token' => $access_token,
                     'visibility'   => $visibility,
                 ];
                 // トゥートの実行
@@ -485,7 +482,7 @@ EOL;
                     $s = str_replace('-', '_', $s);
                     
                     return $s;
-                }
+                };
                 
                 // 新着の差分をループしてトゥート
                 foreach($qiita_items_diff as $item){
@@ -529,20 +526,24 @@ ${tags}
 
 『${title}』 @${id_user_qiita}
 ${url} 
-EOL;                        
-                        
+EOL;                                                
                     }
                     
                     // 返信トゥートの実行
                     $visibility = 'unlisted';
                     $params = [
                         'status'         => $msg,
-                        'domain'         => $keys_api['domain'],
-                        'access_token'   => $keys_api['access_token'],
+                        'domain'         => $domain,
+                        'access_token'   => $access_token,
                         'in_reply_to_id' => $id_toot_current,
                         'visibility'     => $visibility,
                     ];
                     $result_toot = post_toot($params);
+                    
+                    echo "<pre>";
+                    print_r($result_toot);
+                    echo "</pre>";
+                    die;
 
                     if ($result_toot == TOOT_SUCCESS) {
                         // トゥートIDの取得
@@ -564,18 +565,16 @@ EOL;
                     'id_date'          => $id_date,
                 ];
                 // 今回のトゥートIDの保存（返信の場合はデイジーチェーン）
-                /**
-                 * @todo デイジーチェーンの場合、途中でトゥートがスパム
-                 *        Qiita記事だったなどで削除された場合にチェーン
-                 *        が切れてしまう。チェックしてからトゥート？
-                 */
                 $result_save = save_data($id_data_toot, $info_toot_to_save);
                 if ($result_save == SAVE_DATA_SUCCESS) {
                     echo "Toot info saved." . BR_EOL;
                 }
-                echo ($is_new_toot) ? "New toot " : "Reply toot ";
-                echo " posted successfuly." . BR_EOL;
-                print_r($info_toot_to_save);
+                // 今回のトゥートIDの保存（返信の場合はデイジーチェーン）
+                $result_save = save_data($id_data_qiita, $qiita_items_diff);
+                if ($result_save == SAVE_DATA_SUCCESS) {
+                    echo "Qiita info saved." . BR_EOL;
+                }
+
             } else {
                 echo "Toot fail." . BR_EOL;
             }
