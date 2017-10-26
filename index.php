@@ -456,34 +456,8 @@ EOL;
             // 
             // 本稼働の場合、'visibility' は以下の挙動になる
             //    初トゥート：public
+            if (! $is_new_toot && ! empty($id_toot_current) && ! empty($qiita_items_diff)) {
 
-            if (! $is_new_toot && ! empty($id_toot_current)) {
-                
-                // ユーザー名の正規化クロージャー
-                /** @todo これは関数にした方がいいかも */
-                $id_user_qiita = function($s){
-                    $s = trim($s);
-                
-                    /** @todo QiitaIDとQiitadonIDが違う人がいるので置き
-                              換えが必要。Note: BOTのフォロワー情報から
-                              QiitaIDは取得できる */
-                    $table = [
-                        'sample-user' => 'sample_user',
-                    ];
-                    $search  = array_keys($table);
-                    $replace = array_values($table);
-                
-                    /* Common replacement */
-                    $s = str_replace($search, $replace, $s);
-                    $s = str_replace('@github', '', $s);
-                    $s = str_replace('@', 'at', $s);
-                    $s = str_replace('.', '_', $s);
-                    $s = str_replace('.', '_', $s);
-                    $s = str_replace('-', '_', $s);
-                    
-                    return $s;
-                };
-                
                 // 新着の差分をループしてトゥート
                 foreach($qiita_items_diff as $item){
 
@@ -507,26 +481,12 @@ EOL;
                     //
                     /** @todo BOTフォロワー、Qiitadonユーザーの判断
                               BOTフォロワーなら未収載 */
-                    $id_user_qiita( $item['user']['id'] );
+                    $id_user_qiita = sanitize_id_user_qiita($item['user']['id']);
                     $url = "https://qiitadon.com/@${id_user_qiita}";
                     if(isValid_url($url)){
-                        $msg =<<<EOL
-${tags}
-
-@${id_user_qiita} さんがQiita記事を投稿しました。
-
-『${title}』
-${url}
-EOL;                        
+                        $msg ="${tags}\n@${id_user_qiita} さんがQiita記事を投稿しました。\n\n『${title}』\n${url}";
                     } else {
-                        $msg =<<<EOL
-${tags}
-
-新しいQiita記事が投稿されました。
-
-『${title}』 @${id_user_qiita}
-${url} 
-EOL;                                                
+                        $msg ="${tags}\n新しいQiita記事が投稿されました。\n\n『${title}』 \n@${id_user_qiita}\n${url} ";
                     }
                     
                     // 返信トゥートの実行
@@ -540,16 +500,10 @@ EOL;
                     ];
                     $result_toot = post_toot($params);
                     
-                    echo "<pre>";
-                    print_r($result_toot);
-                    echo "</pre>";
-                    die;
-
                     if ($result_toot == TOOT_SUCCESS) {
                         // トゥートIDの取得
                         $id_toot_current = json_decode($result_toot['value'], JSON_OBJECT_AS_ARRAY)['id'];
-                    }
-                    
+                    }                    
                 }
                 
             }
@@ -557,7 +511,7 @@ EOL;
             // トゥート結果の表示とトゥートID＆今日の日付を保存
             if ($result_toot == TOOT_SUCCESS) {
                 // トゥートIDの取得
-                $id_toot_current = json_decode($result_toot['value'], JSON_OBJECT_AS_ARRAY)['id'];
+                //$id_toot_current = json_decode($result_toot['value'], JSON_OBJECT_AS_ARRAY)['id'];
                 // 保存するデータ
                 $info_toot_to_save = [
                     'id_toot_current'  => $id_toot_current,
@@ -975,6 +929,39 @@ function isValid_url($sUrl)
         return true;
     }
 }
+
+/**
+ * sanitize_id_user_qiita function.
+ *
+ * ユーザーのQiitaIDがQiitadonIDと同じであるとは限らないため、Qiitadonの
+ * 禁則文字の置換処理を行う。
+ * @access public
+ * @param mixed $s
+ * @return void
+ * @todo QiitaIDとQiitadonIDが違う人がいるので置き換えが必要。
+ * @note BOTのフォロワー情報からQiitaIDは取得できる 
+ */
+function sanitize_id_user_qiita($s){
+    $s = trim($s);
+    
+    $table = [
+        'sample-user' => 'sample_user',
+    ];
+    $search  = array_keys($table);
+    $replace = array_values($table);
+
+    /* Common replacement */
+    $s = str_replace($search, $replace, $s);
+    $s = str_replace('@github', '', $s);
+    $s = str_replace('@', 'at', $s);
+    $s = str_replace('.', '_', $s);
+    $s = str_replace('.', '_', $s);
+    $s = str_replace('-', '_', $s);
+    
+    return $s;
+};
+
+
 /* ---------------------------------
     環境／デバッグ用／その他 Functions
    --------------------------------- */
