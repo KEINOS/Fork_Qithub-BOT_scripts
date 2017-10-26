@@ -393,8 +393,15 @@ if (IS_PROC_REGULAR) {
             $qiita_items_new  = decode_api_to_array($result_api)['value'];
             $qiita_items_diff = array_diff_key($qiita_items_new, $qiita_items_old);
             
+            if(IS_MODE_DEBUG){
+                echo '<pre>';
+                print_r($qiita_items_diff);
+                echo '</pre>';
+                die;
+            }
+            
             // 今日の日付をトゥート日のIDとして取得
-            $id_date = (int) date('Ymd');
+            $id_date = (int) date('YmdH');
 
             // トゥートIDの初期化
             $id_toot_current  = ''; // １つ前のトゥートID
@@ -422,10 +429,14 @@ if (IS_PROC_REGULAR) {
             //    
             if ($is_new_toot) {
                 // トゥート内容の作成
-                $date_today = date('Y/m/d');
-                $msg =<<<EOL
-${date_today} の新着Qiita記事のトゥートを始めるよ！
-このトゥートに非公開でトゥートしていくから、興味がある人はフォローしてね。
+                $date_today = date('Y/m/d H時    ');
+                $msg = "${date_today} の新着Qiita記事のトゥートを始めるよ！";
+                $spoiler_text =<<<EOL
+このトゥートに「非公開」でトゥートしていくから、興味がある人はフォローしてね。
+
+ただ、QiitadonのユーザーのQiita記事だった場合は「未収載」でトゥートするよ。
+また、「★（お気に入り）」や「ブースト」数が一定数超えたトゥートは「公開」で改めてトゥートするね。
+Qiita記事にも「いいね」するから、気にいった記事のトゥートだったら知らせてね！
 EOL;
                 // 本稼働の場合は 'unlisted' -> 'public' に変更
                 $visibility = 'unlisted';
@@ -433,6 +444,7 @@ EOL;
                 // トゥートのパラメータ設定（新規投稿）
                 $params = [
                     'status'       => $msg,
+                    'spoiler_text' => $spoiler_text,
                     'domain'       => $domain,
                     'access_token' => $access_token,
                     'visibility'   => $visibility,
@@ -462,9 +474,9 @@ EOL;
                 foreach($qiita_items_diff as $item){
 
                     // Qiita記事の情報取得
-                    $title = $item['title'];
-                    $url   = $item['url'];
-                    $tags  = '';
+                    $item_title = $item['title'];
+                    $item_url   = $item['url'];
+                    $item_tags  = '';
                     foreach($item['tags'] as $tag){
                         $s = $tag['name'];
                         $s = str_replace('#', 'Sharp', $s);
@@ -472,9 +484,9 @@ EOL;
                         $s = str_replace('-', '_', $s);
                         $s = trim($s);
 
-                        $tags .= "#${s} ";
+                        $item_tags .= "#${s} ";
                     }
-                    $tags = trim($tags);
+                    $item_tags = trim($item_tags);
 
                     // トゥート内容の作成
                     // Qiitadonユーザーの場合はメッセージ内容を変更
@@ -482,15 +494,16 @@ EOL;
                     /** @todo BOTフォロワー、Qiitadonユーザーの判断
                               BOTフォロワーなら未収載 */
                     $id_user_qiita = sanitize_id_user_qiita($item['user']['id']);
-                    $url = "https://qiitadon.com/@${id_user_qiita}";
-                    if(isValid_url($url)){
-                        $msg ="${tags}\n@${id_user_qiita} さんがQiita記事を投稿しました。\n\n『${title}』\n${url}";
+                    $url_user = "https://qiitadon.com/@${id_user_qiita}";
+                    if(isValid_url($url_user)){
+                        $visibility = 'unlisted';
+                        $msg ="@${id_user_qiita} さんが新規Qiita記事を投稿しました。\n\n『${item_title}』\n${item_url}\n${item_tags}";
                     } else {
-                        $msg ="${tags}\n新しいQiita記事が投稿されました。\n\n『${title}』 \n@${id_user_qiita}\n${url} ";
+                        $visibility = 'private';
+                        $msg ="新しいQiita記事が投稿されました。\n\n『${item_title}』 @${id_user_qiita}\n${item_url}\n${item_tags}";
                     }
                     
                     // 返信トゥートの実行
-                    $visibility = 'unlisted';
                     $params = [
                         'status'         => $msg,
                         'domain'         => $domain,
