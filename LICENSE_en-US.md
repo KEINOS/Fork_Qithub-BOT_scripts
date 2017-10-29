@@ -8,7 +8,9 @@ This work is licensed under a <a rel="license" href="http://creativecommons.org/
 
 ### Scope
 
-All source code, documents, configuration files and directory structure in this repository (Qithub-BOT/scripts) are published under the Creative Commons' ["Attribution-ShareAlike 4.0 International (CC BY - SA 4.0)" license](https://creativecommons.org/licenses/by-sa/4.0/).
+All source code, documents, configuration files and image files in this repository (Qithub-BOT/scripts) are published under the Creative Commons' ["Attribution-ShareAlike 4.0 International (CC BY - SA 4.0)" license](https://creativecommons.org/licenses/by-sa/4.0/).
+
+As an exception, data saved and/or created by the code are EXEMPTED from this license. Also DO NOT include any third-party code/s in this repository that have other license.
 
 See the terms of the license at ["Attribution-ShareAlike 4.0 International (CC BY - SA 4.0)"](https://creativecommons.org/licenses/by-sa/4.0/) for your rights in this repository.
 
