@@ -10,7 +10,7 @@ This work is licensed under a <a rel="license" href="http://creativecommons.org/
 
 All source code, documents, configuration files and image files in this repository (Qithub-BOT/scripts) are published under the Creative Commons' ["Attribution-ShareAlike 4.0 International (CC BY - SA 4.0)" license](https://creativecommons.org/licenses/by-sa/4.0/).
 
-As an exception, data saved and/or created by the code are EXEMPTED from this license. Also DO NOT include any third-party code/s in this repository that have other license.
+Thus, in case of using any third-party code/s that have other licenses, DO NOT include them in this repository. Try to **publish** them in another way.
 
 See the terms of the license at ["Attribution-ShareAlike 4.0 International (CC BY - SA 4.0)"](https://creativecommons.org/licenses/by-sa/4.0/) for your rights in this repository.
 
@@ -18,6 +18,6 @@ For legal details, please refer to [Legal Code](https://creativecommons.org/lice
 
 ### Supplement
 
-The sooner, the better. If you have any questions about licensing, do not hesitate to ask and bring an issue at Github of this repository. Let us discuss and solve your doubts and our problems.
+If you have any questions about licensing, do not hesitate to ask and bring an issue at Github of this repository. Let us discuss and solve your doubts and your problems. The sooner, the better, it is.
 
 [Repository's issue page](https://github.com/Qithub-BOT/scripts/issues)
