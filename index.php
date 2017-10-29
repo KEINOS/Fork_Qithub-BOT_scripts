@@ -13,6 +13,11 @@
  * @php version >=5.4.45
  */
 
+// 定数読み込み設定
+include_once('./includes/constants.php.inc');
+
+// 関数読み込み設定
+include_once('./includes/functions.php.inc');
 
 /* =====================================================================
     初期設定
@@ -20,12 +25,6 @@
 
 // 言語設定->日本語 地域->東京 にセット
 set_utf8_ja('Asia/Tokyo');
-
-// 定数読み込み設定
-include_once('./includes/constants.php.inc');
-
-// 関数読み込み設定
-include_once('./includes/functions.php.inc');
 
 // 'system' および 'plugin' が使えるプログラム言語
 $extension_types = [
@@ -365,7 +364,7 @@ if (IS_PROC_REGULAR) {
         // 'toot-daily' プロセスを新着Qiita記事のトゥートにカスタムした
         // プロトタイプ。
         case 'toot-daily-qiita-items':
-            include_once('./toot-daily-qiita-items.php.inc');
+            include_once('./includes/toot-daily-qiita-items.php.inc');
             break; //EOF toot-daily-qiita-items
 
         // get-mastodon-user-info
