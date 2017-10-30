@@ -4,20 +4,16 @@
 
 <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png" /></a>
 
-This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>.
+**All files included in this repository ([Qithub/scripts](https://github.com/Qithub-BOT/scripts/)) and this repository** are provided under the "<a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-Share Alike 4.0 International</a>" license.
 
-### Scope
+For a summary of your rights and licenses for these files, please refer to "[Commons Certificate](https://creativecommons.org/licenses/by-sa/4.0/)". Also see "[Legal Code](https://creativecommons.org/licenses/by-sa/4.0/legalcode)" for legal details.
 
-All source code, documents, configuration files and image files in this repository (Qithub-BOT/scripts) are published under the Creative Commons' ["Attribution-ShareAlike 4.0 International (CC BY - SA 4.0)" license](https://creativecommons.org/licenses/by-sa/4.0/).
-
-Thus, in case of using any third-party code/s that have other licenses, DO NOT include them in this repository. Try to **publish** them in another way.
-
-See the terms of the license at ["Attribution-ShareAlike 4.0 International (CC BY - SA 4.0)"](https://creativecommons.org/licenses/by-sa/4.0/) for your rights in this repository.
-
-For legal details, please refer to [Legal Code](https://creativecommons.org/licenses/by-sa/4.0/legalcode).
 
 ### Supplement
 
-If you have any questions about licensing, do not hesitate to ask and bring an issue at Github of this repository. Let us discuss and solve your doubts and your problems. The sooner, the better, it is.
+Please **DO NOT include code with other licenses in this repository**.
 
-[Repository's issue page](https://github.com/Qithub-BOT/scripts/issues)
+If you have questions about licensing, please **do not hesitate to ask** on the issue page of this repository on GitHub. After consultation, we will solve doubts and problems.
+
+- Issue page of this repository
+    - [https://github.com/Qithub-BOT/scripts/issues](https://github.com/Qithub-BOT/scripts/issues)
