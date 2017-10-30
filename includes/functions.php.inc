@@ -4,19 +4,26 @@
    ===================================================================== */
 
 /**
- * 'system' および 'plugin' のスクリプトを実行します。
+ * run_script function.
+ * 
+ * Qithub API に準拠した 'system' および 'plugin' のスクリプトを実行（指
+ * 定されたエンドポイント先の`main.xxx`を実行）します。
  *
  * 実行に必要なパラメーターは各スクリプトのディレクトリにある README.md
  * を参照して準拠してください。
  *
- * @param  string  $dir_name        スクリプトのディレクトリ名。
- *                                  エンドポイント名。
+ * @access public
+ * @param  string  $dir_name        スクリプトのディレクトリ名（エンドポ
+ *                                  イント名）
  *                                  'system/<script name>'
  *                                  'plugin/<script name>'
  * @param  array   $params          スクリプトに渡す配列（パラメーター）
- * @param  boolean $run_background  trueの場合、実行結果を待たずにバック
- *                                  グラウンドで実行します
- * @return json or boolean          バックグラウンド実行の場合は常にtrue
+ * @param  bool    $run_background (default: true) 
+ *                                  バッグクランド実行オプション。trueを
+ *                                  指定した場合、実行結果を待たずにバッ
+ *                                  クグラウンドで実行します
+ * @return string                   実行結果を返します。URL エンコードさ
+ *                                  れたJSONデータ文字列（Qithub API準拠）
  */
 function run_script($dir_name, $params, $run_background = true)
 {
@@ -27,12 +34,17 @@ function run_script($dir_name, $params, $run_background = true)
         $params
     );
 
-    // Run as background script unless debug mode.
     // NOTE: Be careful that commands are NOT single quoted
     //       but grave accent aka backquote/backtick.
     if ($run_background) {
-        $log    = `$command > /dev/null &`;
-        $result = 'OK';
+        $log  = `$command > /dev/null &`;
+        $array_value = [
+            'result' => 'OK',
+            'value'  => "Running background.\n ${log}",
+        ];
+        $json_raw = json_encode($array_value);
+        $result   = urlencode($json_raw);
+
     } else {
         $result = `$command`;
     }
@@ -79,14 +91,15 @@ function encode_array_to_api($array_value)
     ゲッター系 Functions
    --------------------------------------------------------------------- */
 /**
- *  指定された 'system' および 'pugins' の スクリプトの実行言語を取得し
- *  ます。
+ * get_lang_type function.
+ * 
+ * 指定された 'system' および 'pugins' の スクリプトの実行言語を取得しま
+ * す。第１引数に渡されたディレクトリ名より "main.xxx" の拡張子を調べ、
+ * 該当する言語を返します。
  *
- *  第１引数に渡されたディレクトリ名より "main.xxx" の拡張子を調べ、該当
- *  する言語を返します。
- *
+ * @access public
  * @param  string $dir_name  スクリプトのディレクトリ名
- * @return string            プログラム言語名。false の場合は引数に問題
+ * @return mixed             プログラム言語名。false の場合は引数に問題
  *                           があるか定義されていない拡張子が"main.xxxx"
  *                           に使われています。
  */
@@ -228,11 +241,14 @@ function post_toot($params)
 
 /* ---------------------------------------------------------------------
     DATA I/O Functions
-    'system/data-io'のQithub API ラッパー
+    'system/data-io'の Qithub API ラッパー
    --------------------------------------------------------------------- */
 /**
- *  データの読み込みをします
+ * load_data function.
+ * 
+ * 指定されたキーの保存データの読み込みをします
  *
+ * @access public
  * @param  string  $id_data 保存したデータのキー
  * @return mixed            保存したデータ
  */
@@ -258,11 +274,14 @@ EOL;
 }
 
 /**
- *  データの書き込みをします
+ * save_data function.
+ * 
+ * 指定されたキーで、データの保存をします
  *
- * @param  string  $id_data 保存したデータのキー
- * @param  mixed   $data    保存したいデータ
- * @return boolean          データの保存成功は true、失敗は false
+ * @access public
+ * @param  string  $id_data 保存したいデータのキー
+ * @param  mixed   $data    保存したいデータ（変数,配列,オブジェクト）
+ * @return bool             データの保存成功は true、失敗は false
  */
 function save_data($id_data, $data)
 {
@@ -278,10 +297,13 @@ function save_data($id_data, $data)
 }
 
 /**
- *  データの削除をします
+ * delete_data function.
+ * 
+ * 指定されたキーのデータを削除をします
  *
+ * @access public
  * @param  string  $id_data 保存したデータのキー
- * @return boolean          削除されれば true
+ * @return bool             削除されれば true
  */
 function delete_data($id_data)
 {
@@ -361,13 +383,14 @@ function isValid_url($sUrl)
 /**
  * sanitize_id_user_qiita function.
  *
- * ユーザーのQiitaIDがQiitadonIDと同じであるとは限らないため、Qiitadonの
- * 禁則文字の置換処理を行う。
+ * ユーザーの QiitaID が QiitadonID と同じであるとは限らないため、
+ * Qiitadonの禁則文字の置換処理を行う。
+ *
  * @access public
  * @param mixed $string
  * @return void
- * @todo QiitaIDとQiitadonIDが違う人がいるので置き換えが必要。
- * @note BOTのフォロワー情報からQiitaIDは取得できる
+ * @todo QiitaID と QiitadonID が違う人がいるので置き換えが必要。
+ * @note BOTのフォロワー情報から QiitaID は取得できる
  */
 function sanitize_id_user_qiita($string)
 {
@@ -394,14 +417,16 @@ function sanitize_id_user_qiita($string)
 /**
  * is_tag_test function.
  *
- * Qiita記事のタグに「テスト」タグが含まれているかのチェック
+ * 渡された文字列に「テスト」や「test」が含まれているか確認する。主に
+ * Qiita記事のタグなどに「テスト」タグが含まれているかのチェックに使う。
  *
  * @access public
- * @param  string $tag Tag of Qiita item
+ * @param  string $tag
  * @return bool
  */
 function is_tag_test($tag)
 {
+    $tag = (string) $tag;
     $tag = trim(strtolower($tag), '#');
 
     switch ($tag) {
@@ -460,8 +485,7 @@ function debug_msg($string)
     if (IS_MODE_DEBUG) {
         $with   = "with";
         $string = esc_html($string);
-        $line = debug_backtrace()[1]['line'];
-        //$line = print_r(debug_backtrace(),true);
+        $line   = debug_backtrace()[1]['line'];
         trigger_error(
             "${string}【呼び出し元】 ${line}行{$with(BR_EOL)}",
             E_USER_WARNING
@@ -477,6 +501,7 @@ function debug_msg($string)
  *
  * @access public
  * @param  mixed  $expression
+ * @param  string $title (default: '') 見出しを付けたい場合に指定
  * @return void
  * @SuppressWarnings(PHPMD)
  */
