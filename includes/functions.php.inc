@@ -215,8 +215,8 @@ function post_toot($params)
 {
     $result_api = run_script('system/post-toot', $params, false);
     $result     = decode_api_to_array($result_api);
-    
-    if( ($result['result'] !== 'OK') && IS_MODE_DEBUG){
+
+    if (($result['result'] !== 'OK') && IS_MODE_DEBUG) {
         echo '<h1>hoge</h1><pre>';
         print_r($result_api);
         echo '</pre>';
@@ -301,14 +301,36 @@ function delete_data($id_data)
 
 
 /* ---------------------------------------------------------------------
-    バリデーション Functions
+    サニタイズ（正規化）／バリデーション Functions
    --------------------------------------------------------------------- */
+
+/**
+ * esc_html function.
+ *
+ * デバッグなどでデータを表示する際のエスケープを行う。
+ *
+ * @access public
+ * @param mixed $string
+ * @return void
+ */
+function esc_html($string)
+{
+    $string = (string) $string;
+
+    if (0 === strlen($string)) {
+        return '';
+    }
+
+    $string = htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
+
+    return $string;
+}
 
 /**
  * isValid_url function.
  *
  * 有効なURLかを返す。主にQiitadonユーザーが存在するかの確認に利用。
- * 
+ *
  * @access public
  * @param mixed $sUrl
  * @return void
@@ -342,14 +364,15 @@ function isValid_url($sUrl)
  * ユーザーのQiitaIDがQiitadonIDと同じであるとは限らないため、Qiitadonの
  * 禁則文字の置換処理を行う。
  * @access public
- * @param mixed $s
+ * @param mixed $string
  * @return void
  * @todo QiitaIDとQiitadonIDが違う人がいるので置き換えが必要。
- * @note BOTのフォロワー情報からQiitaIDは取得できる 
+ * @note BOTのフォロワー情報からQiitaIDは取得できる
  */
-function sanitize_id_user_qiita($s){
-    $s = trim($s);
-    
+function sanitize_id_user_qiita($string)
+{
+    $string = trim($string);
+
     $table = [
         'sample-user' => 'sample_user',
     ];
@@ -357,15 +380,44 @@ function sanitize_id_user_qiita($s){
     $replace = array_values($table);
 
     /* Common replacement */
-    $s = str_replace($search, $replace, $s);
-    $s = str_replace('@github', '', $s);
-    $s = str_replace('@', 'at', $s);
-    $s = str_replace('.', '_', $s);
-    $s = str_replace('.', '_', $s);
-    $s = str_replace('-', '_', $s);
-    
-    return $s;
+    $string = str_replace($search, $replace, $string);
+    $string = str_replace('@github', '', $string);
+    $string = str_replace('@', 'at', $string);
+    $string = str_replace('.', '_', $string);
+    $string = str_replace('.', '_', $string);
+    $string = str_replace('-', '_', $string);
+
+    return $string;
 };
+
+
+/**
+ * is_tag_test function.
+ *
+ * Qiita記事のタグに「テスト」タグが含まれているかのチェック
+ *
+ * @access public
+ * @param  string $tag Tag of Qiita item
+ * @return bool
+ */
+function is_tag_test($tag)
+{
+    $tag = trim(strtolower($tag), '#');
+
+    switch ($tag) {
+        case 'test':
+        case 'テスト':
+        case 'てすと':
+        case 'testing':
+        case 'temp':
+            $result = true;
+            break;
+        default:
+            $result = false;
+    }
+
+    return $result;
+}
 
 
 /* ---------------------------------------------------------------------
@@ -375,15 +427,21 @@ function sanitize_id_user_qiita($s){
 /**
  * with function.
  *
- * 定数の文字列内展開用関数
+ * 定数を文字列内で展開するための関数（Laravel風）
+ *
+ * 使用例：
+ *    define('SAMPLE', 'sample');
+ *    $s = "The value is {$with(SAMPLE)}.";
+ * 注意：
+ *    関数内で使う場合は`$with = "with";`を利用前に代入すること
  *
  * @access public
- * @param mixed $v
+ * @param mixed $value
  * @return mixed
  */
-function with($v)
+function with($value)
 {
-    return $v;
+    return $value;
 }
 $with = "with";
 
@@ -394,17 +452,18 @@ $with = "with";
  * （E_USER_WARNING）出力関数。エラー発生元の取得も行う。
  *
  * @access public
- * @param mixed $str
+ * @param mixed $string
  * @return void
  */
-function debug_msg($str)
+function debug_msg($string)
 {
-    $with = "with";
     if (IS_MODE_DEBUG) {
+        $with   = "with";
+        $string = esc_html($string);
         $line = debug_backtrace()[1]['line'];
         //$line = print_r(debug_backtrace(),true);
         trigger_error(
-            "${str}【呼び出し元】 ${line}行{$with(BR_EOL)}",
+            "${string}【呼び出し元】 ${line}行{$with(BR_EOL)}",
             E_USER_WARNING
         );
     }
@@ -421,24 +480,34 @@ function debug_msg($str)
  * @return void
  * @SuppressWarnings(PHPMD)
  */
-function echo_on_debug($expression)
+function echo_on_debug($expression, $title = '')
 {
     if (IS_MODE_DEBUG) {
+        $title      = esc_html($title);
+        $expression = esc_html($expression);
+
+        if (! empty($title)) {
+            $title = "<h1>${title}</h1>";
+        }
+
         if (is_string($expression)) {
-            echo "<pre>${expression}</pre>" . PHP_EOL;
+            echo "<div>${title}<pre>${expression}</pre></div>" . PHP_EOL;
         } else {
-            echo '<pre>';
+            echo '<div><pre>';
             print_r($expression);
-            echo "</pre>" . PHP_EOL;
+            echo "</pre></div>" . PHP_EOL;
         }
     }
 }
 
 /**
- *  実行環境の言語を日本語に設定しタイムゾーンを設定する
+ * set_utf8_ja function.
  *
- * @param  string  $timezone デフォルトは東京
- * @return
+ * 実行環境の言語を日本語に設定しタイムゾーンを設定する
+ *
+ * @access public
+ * @param string $timezone (default: 'Asia/Tokyo')
+ * @return void
  * @SuppressWarnings(PHPMD)
  */
 function set_utf8_ja($timezone = 'Asia/Tokyo')

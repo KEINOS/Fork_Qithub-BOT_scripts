@@ -3,7 +3,7 @@
 $result_toot = TOOT_FAIL;
 
 // トゥートに必要なAPIの取得
-$keys_api = get_api_keys('../../qithub.conf.json', 'qiitadon');
+$keys_api     = get_api_keys('../../qithub.conf.json', 'qiitadon');
 $domain       = $keys_api['domain'];
 $access_token = $keys_api['access_token'];
 
@@ -29,9 +29,9 @@ $result_api = run_script(
 $qiita_items_new  = decode_api_to_array($result_api)['value'];
 $qiita_items_diff = array_diff_key($qiita_items_new, $qiita_items_old);
 
-if(IS_MODE_DEBUG){
+if (IS_MODE_DEBUG) {
     echo '<h1>New item</h1><pre>';
-    print_r($qiita_items_new);
+    echo_on_debug($qiita_items_new);
     echo '</pre>';
     echo '<h1>Old item</h1><pre>';
     print_r($qiita_items_old);
@@ -67,7 +67,7 @@ if ($info_toot !== LOAD_DATA_EMPTY) {
 // 親トゥートと直近トゥートのIDを設定
 // 本稼働の場合、'visibility' は以下の挙動になる
 //    初トゥート：public
-//    
+//
 if ($is_new_toot) {
     // トゥート内容の作成
     $date_today = date('Y/m/d H時    ');
@@ -94,42 +94,51 @@ EOL;
     ];
     // トゥートの実行
     $result_toot = post_toot($params);
-    
-    if ($result_toot == TOOT_SUCCESS){
+
+    if ($result_toot == TOOT_SUCCESS) {
         $is_new_toot = false;
         // 親トゥート・直近トゥートのID設定
         $id_toot_original = json_decode($result_toot['value'], JSON_OBJECT_AS_ARRAY)['id'];
         $id_toot_current  = $id_toot_original;
     }
-
 }
 
 // 新着Qiita記事のトゥート開始（子トゥート）
 //
-// 親トゥートを元にスレッドで新着をトゥートしていく。返信は
-// １つ前のトゥートにしていく。
-// 
+// 親トゥートを元にスレッドで新着をトゥートしていく。返信は１つ前のトゥー
+// ト、Qiita記事のタグに「テスト」や「test」が含まれる場合はスキップ。
+//
 // 本稼働の場合、'visibility' は以下の挙動になる
 //    初トゥート：public
 if (! $is_new_toot && ! empty($id_toot_current) && ! empty($qiita_items_diff)) {
-
     // 新着の差分をループしてトゥート
-    foreach($qiita_items_diff as $item){
+    foreach ($qiita_items_diff as $item) {
 
-        // Qiita記事の情報取得
-        $item_title = $item['title'];
-        $item_url   = $item['url'];
-        $item_tags  = '';
-        foreach($item['tags'] as $tag){
-            $s = $tag['name'];
+        // Qiita記事の情報代入と初期化
+        $item_title  = $item['title'];
+        $item_url    = $item['url'];
+        $item_tags   = '';
+        $is_item_test = false;
+
+        foreach ($item['tags'] as $tag) {
+            $s = (string) $tag['name'];
             $s = str_replace('++', 'プラプラ', $s);
             $s = str_replace('#', 'Sharp', $s);
             $s = str_replace('.', '', $s);
             $s = str_replace('-', '_', $s);
             $s = trim($s);
-
+            
+            // タグの追加
             $item_tags .= "#${s} ";
+
+            $is_item_test = (is_tag_test($s) && ! $is_tag_test) ?: $is_tag_test;
         }
+        
+        // テスト記事ならトゥートをスキップ
+        if ($is_item_test){
+            continue;
+        }
+
         $item_tags = trim($item_tags);
 
         // トゥート内容の作成
@@ -139,14 +148,14 @@ if (! $is_new_toot && ! empty($id_toot_current) && ! empty($qiita_items_diff)) {
                   BOTフォロワーなら未収載 */
         $id_user_qiita = sanitize_id_user_qiita($item['user']['id']);
         $url_user = "https://qiitadon.com/@${id_user_qiita}";
-        if(isValid_url($url_user)){
+        if (isValid_url($url_user)) {
             $visibility = 'unlisted';
             $msg ="@${id_user_qiita} さんが新規Qiita記事を投稿しました！\n\n『${item_title}』\n${item_url}\n\n[${item_tags}]\n";
         } else {
             $visibility = 'private';
             $msg ="【新着Qiita記事】\n\n『${item_title}』 @${id_user_qiita}\n${item_url}\n\n[${item_tags}]\n";
         }
-        
+
         // 返信トゥートの実行
         $params = [
             'status'         => $msg,
@@ -156,13 +165,12 @@ if (! $is_new_toot && ! empty($id_toot_current) && ! empty($qiita_items_diff)) {
             'visibility'     => $visibility,
         ];
         $result_toot = post_toot($params);
-        
+
         if ($result_toot == TOOT_SUCCESS) {
             // トゥートIDの取得
             $id_toot_current = json_decode($result_toot['value'], JSON_OBJECT_AS_ARRAY)['id'];
-        }                    
+        }
     }
-    
 }
 
 // トゥート結果の表示とトゥートID＆今日の日付を保存
@@ -185,10 +193,9 @@ if ($result_toot == TOOT_SUCCESS) {
     if ($result_save == SAVE_DATA_SUCCESS) {
         echo 'Qiita info saved.' . BR_EOL;
     }
-
 } else {
     echo 'Toot fail.' . BR_EOL;
-    if( empty($qiita_items_diff) ){
+    if (empty($qiita_items_diff)) {
         echo 'There is no diffs on tooted items. Did not toot.' . BR_EOL;
     }
 }
