@@ -4,7 +4,7 @@
 
 <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png" /></a>
 
-**All files included in this repository ([Qithub/scripts](https://github.com/Qithub-BOT/scripts/)) and this repository** are provided under the "<a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-Share Alike 4.0 International</a>" license.
+**All files included in this repository ([Qithub-BOT/scripts](https://github.com/Qithub-BOT/scripts/)) and this repository** are provided under the "<a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-Share Alike 4.0 International</a>" license.
 
 For a summary of your rights and licenses for these files, please refer to "[Commons Certificate](https://creativecommons.org/licenses/by-sa/4.0/)". Also see "[Legal Code](https://creativecommons.org/licenses/by-sa/4.0/legalcode)" for legal details.
 
