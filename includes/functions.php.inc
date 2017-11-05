@@ -53,25 +53,33 @@ function run_script($dir_name, $params, $run_background = true)
 }
 
 /**
- *  URLエンコードされたJSONを配列にデコードします
+ * decode_api_to_array function.
  *
- * @param  string  $json_enc APIからのエンコード済み出力結果
+ * Qithub 内の`system`および`plugins`からの出力結果の API データ・フォー
+ * マット（URLエンコードされたJSON文字列）を PHP配列にデコードします。
+ *
+ * @access public
+ * @param  string  $json_enc APIからのURLエンコード済みJSON
  * @return array             デコード結果
  * @link https://github.com/Qithub-BOT/scripts/issues/16
  */
 function decode_api_to_array($json_enc)
 {
-    $json_raw  = urldecode($json_enc);
-    $array     = json_decode($json_raw, JSON_OBJECT_AS_ARRAY);
+    $json_raw = urldecode($json_enc);
+    $array    = json_decode($json_raw, JSON_OBJECT_AS_ARRAY);
 
     return $array;
 }
 
 /**
- *  配列をJSON & URLエンコードにエンコードします
+ * encode_array_to_api function.
+ * 
+ * 配列を Qithub API データフォーマット（JSON & URLエンコード）にエンコー
+ * ドします
  *
- *  'system'および'plugins'は、このデータ形式で入力を受け付けます。
+ * 'system'および'plugins'は、このデータ形式で入力を受け付けます。
  *
+ * @access public
  * @param  array  $array_value スクリプトの実行言語（'php','python'）
  * @return string              エンコード結果
  * @link https://github.com/Qithub-BOT/scripts/issues/16
@@ -123,11 +131,14 @@ function get_lang_type($dir_name)
 }
 
 /**
- * 各種API用に必要なキーの取得をします
+ * get_api_keys function.
+ * 
+ * 各種API用に必要な各種キーの取得をします
  *
  * 第１引数に渡されたパスにあるJSON形式のCONFファイルの中から第２引数の
  * キーを持つ配列の値を返します。
  *
+ * @access public
  * @param  string $path_file_conf
  * @param  string $name_conf
  * @return array
@@ -143,9 +154,9 @@ function get_api_keys($path_file_conf, $name_conf)
 
 /**
  * 'system'および'plugins' を CLI (Command Line Interface)で実行するため
- * の Qithub 準拠のコマンドを生成します
+ * のコマンドを生成します
  *
- * @param  string $lang_type   スクリプトの実行言語（'php','python'）
+ * @param  string $lang_type   スクリプトの実行言語（'php','python'など）
  * @param  string $name_script CLIで実行するスクリプトのパス
  * @param  string $array_value CLIでスクリプトに渡す引数の配列データ
  * @return string              CLI用のコマンド
@@ -163,8 +174,12 @@ function get_cli_command($lang_type, $dir_name, $array_value)
 
 
 /**
- * 'system' および 'plugins' のスクリプトの絶対パスを返します
+ * get_path_script function.
+ * 
+ * 'system' および 'plugins' 内の実行スクリプト（main.???まで）の絶対パス
+ * を返します。
  *
+ * @access public
  * @param  string $dir_name    スクリプトのディレクトリ
  *                             'system/<script name>'
  *                             'plugin/<script name>'
@@ -191,8 +206,12 @@ function get_path_script($dir_name, $lang_type)
 }
 
 /**
- *  スクリプトを CLI で実行する際に必要なプログラム言語のパスを取得する
+ * get_path_exe function.
+ * 
+ * `systems` および `plugins` 内の各々のスクリプトを CLI で実行する際に
+ * 必要なプログラム言語のパスを取得する
  *
+ * @access public
  * @param  string $lang_type スクリプトの実行言語（'php','python',etc）
  * @return string            スクリプト言語のパス
  */
@@ -201,7 +220,7 @@ function get_path_exe($lang_type)
     $lang_type = strtolower($lang_type);
     switch ($lang_type) {
         case 'php':
-            $path_cli = '/usr/bin/php'; // PHP7 .0.22 cli
+            $path_cli = '/usr/bin/php'; // PHP 7.0.22 cli
             break;
         default:
             throw new Exception("不明なプログラム言語の指定 ${lang_type}");
@@ -213,29 +232,70 @@ function get_path_exe($lang_type)
 }
 
 /* ---------------------------------------------------------------------
-    Plugin Functions
-    'plugins/xxxxxx'のQithub API ラッパー
+    Wrapper Functions
+
+    'system/xxxxxx' や 'plugins/xxxxxx' の Qithub API ラッパー
    --------------------------------------------------------------------- */
+/**
+ * delete_toot function.
+ *
+ * 第１引数の配列で指定されたトゥートIDとトークンで過去のトゥートを削除
+ * します。
+ *
+ * 使用例＆必須項目）
+ *   $is_toot_deleted = delete_toot([
+ *      'domain'       => $keys_api['domain'],
+ *      'access_token' => $keys_api['access_token'],
+ *      'id'           => $id_toot,
+ *   ]);
+ * 
+ * @access public
+ * @param  array  $params
+ * @return bool
+ */
 function delete_toot($params)
 {
-    $result_api = run_script('system/delete-toot', $params, false);
+    $dir_name_api   = 'system/delete-toot';
+    $run_background = false;
+
+    $result_api = run_script($dir_name_api, $params, $run_background);
     $result     = decode_api_to_array($result_api);
 
     return  ( $result['result'] == 'OK' );
 }
 
+/**
+ * post_toot function.
+ *
+ * 第１引数の配列で指定されたトークンとメッセージ内容でトゥートを実行し
+ * ます。第１引数の配列内の'visibility'キーの値は Mastodon に準拠。
+ *
+ * 使用例＆必須項目）
+ *   $result_toot = post_toot([
+ *       'status'       => 'Hello world',
+ *       'domain'       => $keys_api['domain'],
+ *       'access_token' => $keys_api['access_token'],
+ *       'visibility'   => 'unlisted',
+ *   ]);
+ * 
+ * @access public
+ * @param  array  $params
+ * @return mixed           Mastodon API からのトゥート結果。失敗した場合
+ *                         は TOOT_FAIL(false) が返される。
+ */
 function post_toot($params)
 {
-    $result_api = run_script('system/post-toot', $params, false);
+    $dir_name_api   = 'system/post-toot';
+    $run_background = false;
+
+    $result_api = run_script($dir_name_api, $params, $run_background);
     $result     = decode_api_to_array($result_api);
 
     if (($result['result'] !== 'OK') && IS_MODE_DEBUG) {
-        echo '<h1>hoge</h1><pre>';
-        print_r($result_api);
-        echo '</pre>';
+        echo_on_debug($result_api, 'TOOT FAILED: Posted toot info');
     }
 
-    return  ( $result['result'] == 'OK' ) ? $result : false;
+    return  ( $result['result'] == 'OK' ) ? $result : TOOT_FAIL;
 }
 
 
