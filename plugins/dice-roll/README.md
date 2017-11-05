@@ -13,7 +13,7 @@
 
 | 言語バージョン | サーバー |
 | --- | --- |
-| PHP  (cli) |  |
+| PHP 5.5.9-1ubuntu4.22 (cli) | c9.io |
 
 ## 動作仕様
 
@@ -27,7 +27,7 @@
 | Field         | Type   | Required | Description |
 | ------------- | ------ | --- | ----------- |
 | is_mode_debug | bool   | yes | 本体スクリプトがデバッグモードで稼働しているかの受け取りフラグ |
-| dicecode      | string | no  | ダイス数と最大値を指定する文字列をダイスコードで表す |
+| dicecode      | string | yes  | ダイス数と最大値を指定する文字列をダイスコードで表す |
 
 ### Responce parameters:
 
