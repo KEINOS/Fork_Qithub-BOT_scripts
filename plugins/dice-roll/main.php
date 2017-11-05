@@ -20,7 +20,7 @@ set_utf8_ja('Asia/Tokyo');
 $arg = get_api_input_as_array();
 
 // ダイスコードを取得
-$dice_code = $arg['say_also'];
+$dice_code = $arg['dicecode'];
 
 // メッセージの作成（RAW）
 $msg_raw = dice_roll();
