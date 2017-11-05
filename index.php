@@ -457,7 +457,9 @@ if (IS_PROC_REGULAR) {
 
             // Display result
             if (isset($result['result']) && 'OK' == $result['result']) {
-                echo esc_html($result['value']);
+                $roll = implode(' ', $result['value']['roll']);
+                $sum  = $result['value']['sum'];
+                echo esc_html("Result: ${roll} Sum: ${sum}");
             }
 
             if (IS_MODE_DEBUG) {
