@@ -50,7 +50,7 @@ function set_utf8_ja($timezone = 'Asia/Tokyo')
 /**
  * Decode and curiculating dice code
  */
-function dice_roll($dice_code)
+function roll_dice($dice_code)
 {
     $param = explode('D', strtoupper(trim($dice_code)));
     $sum   = 0;
