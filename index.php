@@ -436,12 +436,12 @@ if (IS_PROC_REGULAR) {
         case 'dice-roll':
             // Number of fling（サイコロを振る回数）
             $times = '1';
-            if(isset($_GET['times']) && is_numeric($_GET['times']) && ! empty($_GET['times'])){
+            if (isset($_GET['times']) && is_numeric($_GET['times']) && ! empty($_GET['times'])) {
                 $times = (integer) $_GET['times'];
             }
             // Number of side of a dice（サイコロの最大出目）
             $max_side = '6';
-            if(isset($_GET['max']) && is_numeric($_GET['max']) && ! empty($_GET['max'])){
+            if (isset($_GET['max']) && is_numeric($_GET['max']) && ! empty($_GET['max'])) {
                 $max_side = intval($_GET['max']);
             }
             // Set 'dicecode'
@@ -460,8 +460,8 @@ if (IS_PROC_REGULAR) {
                 echo esc_html($result['value']);
             }
 
-            if( IS_MODE_DEBUG ){
-                echo_on_debug($params,'Params to request');
+            if (IS_MODE_DEBUG) {
+                echo_on_debug($params, 'Params to request');
                 echo_on_debug($result, 'Result responce');
             }
             break;
