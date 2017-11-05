@@ -6,7 +6,7 @@
  * @license 2017/11/05 under discussion
  * @author @hidao80 (@hidao@Qiitadon.com)
  * @link https://github.com/Qithub-BOT/
- * @php version >=5.4.45
+ * @php version >=5.5.9-1
  */
 
 /* =====================================================================
@@ -16,6 +16,10 @@
 // UTF-8, TIMEZONEを日本仕様に設定
 set_utf8_ja('Asia/Tokyo');
 
+// 標準入力を取（テストコード）
+//global $argv;
+//$arg = array("dicecode" => $argv[1]);
+
 // 標準入力を取得
 $arg = get_api_input_as_array();
 
@@ -23,7 +27,7 @@ $arg = get_api_input_as_array();
 $dice_code = $arg['dicecode'];
 
 // メッセージの作成（RAW）
-$msg_raw = dice_roll();
+$msg_raw = dice_roll($dice_code);
 
 // API準拠の出力結果作成
 $msg_api = [
@@ -34,6 +38,7 @@ $msg_enc = json_encode($msg_api);
 $msg_enc = urlencode($msg_enc);
 
 // プラグインの処理結果を出力
+echo $msg_raw."\n";
 echo $msg_enc;
 
 die();
@@ -89,16 +94,16 @@ function set_utf8_ja($timezone = 'Asia/Tokyo')
 /**
  * Decode and curiculating dice code
  */
-function dice_roll($dice_code = "1D6")
+function dice_roll($dice_code)
 {
-    $dice_code = strtoupper(trim($dice_code));
-     
-    $param = explode("D", $dice_code);
-     
+    $param = explode("D", strtoupper(trim($dice_code)));
+    
     $sum = 0;
     $result = array();
-    for ($i = 0; $i < $param[0]; $i++) {
-      $result[] = rand(1, $param[1]);
+    $times = intval($param[0]);
+    $max = intval($param[1]);
+    for ($i = 0; $i < $times; $i++) {
+      $result[] = rand(1, $max);
       $sum += end($result);
     }
     
