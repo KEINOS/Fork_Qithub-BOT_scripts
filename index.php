@@ -424,7 +424,7 @@ if (IS_PROC_REGULAR) {
 
             break;
 
-        // 'dice-roll'
+        // 'roll-dice'
         // -------------------------------------------------------------
         // サイコロを振った結果と合計を表示するプラグイン（ PR #38）の
         // 動作テスト。
@@ -432,9 +432,9 @@ if (IS_PROC_REGULAR) {
         // クエリの引数オプション
         //   '&times='     ：振る回数
         //   '&max='       ：サイコロの最大出目
-        //   '&dicecode='  ：ダイスコード
+        //   '&dice_code=' ：ダイスコード
         //   '&mode=debug' ：デバッグモード（詳細表示）
-        case 'dice-roll':
+        case 'roll-dice':
             // Number of fling（サイコロを振る回数）
             $times = '1';
             if (isset($_GET['times']) && is_numeric($_GET['times']) && ! empty($_GET['times'])) {
@@ -445,15 +445,15 @@ if (IS_PROC_REGULAR) {
             if (isset($_GET['max']) && is_numeric($_GET['max']) && ! empty($_GET['max'])) {
                 $max_side = intval($_GET['max']);
             }
-            // Set 'dicecode'
-            $dicecode = isset($_GET['dicecode']) ? $_GET['dicecode'] : "${times}d${max_side}";
+            // Set 'dice_code'
+            $dicecode = isset($_GET['dice_code']) ? $_GET['dice_code'] : "${times}d${max_side}";
             // Set parameters for Qithub API
             $params = [
                 'is_mode_debug' => IS_MODE_DEBUG,
-                'dicecode'      => $dicecode,
+                'dice_code'     => $dice_code,
             ];
             // Request API
-            $result_api = run_script('plugins/dice-roll', $params, false);
+            $result_api = run_script('plugins/roll-dice', $params, false);
             $result     = decode_api_to_array($result_api);
 
             // Display result
