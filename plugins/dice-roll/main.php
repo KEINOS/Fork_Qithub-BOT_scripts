@@ -16,10 +16,6 @@
 // UTF-8, TIMEZONEを日本仕様に設定
 set_utf8_ja('Asia/Tokyo');
 
-// 標準入力を取（テストコード）
-//global $argv;
-//$arg = array("dicecode" => $argv[1]);
-
 // 標準入力を取得
 $arg = get_api_input_as_array();
 
@@ -38,7 +34,6 @@ $msg_enc = json_encode($msg_api);
 $msg_enc = urlencode($msg_enc);
 
 // プラグインの処理結果を出力
-echo $msg_raw."\n";
 echo $msg_enc;
 
 die();
@@ -103,8 +98,8 @@ function dice_roll($dice_code)
     $times = intval($param[0]);
     $max = intval($param[1]);
     for ($i = 0; $i < $times; $i++) {
-      $result[] = rand(1, $max);
-      $sum += end($result);
+        $result[] = rand(1, $max);
+        $sum += end($result);
     }
     
     return "Result: ".implode(" ", $result)."\nSum: ".$sum;
