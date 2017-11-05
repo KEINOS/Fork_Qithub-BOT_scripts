@@ -432,6 +432,7 @@ if (IS_PROC_REGULAR) {
         // クエリの引数オプション
         //   '&times='     ：振る回数
         //   '&max='       ：サイコロの最大出目
+        //   '&dicecode='  ：ダイスコード
         //   '&mode=debug' ：デバッグモード（詳細表示）
         case 'dice-roll':
             // Number of fling（サイコロを振る回数）
@@ -445,7 +446,7 @@ if (IS_PROC_REGULAR) {
                 $max_side = intval($_GET['max']);
             }
             // Set 'dicecode'
-            $dicecode = "${times}d${max_side}";
+            $dicecode = isset($_GET['dicecode']) ? $_GET['dicecode'] : "${times}d${max_side}";
             // Set parameters for Qithub API
             $params = [
                 'is_mode_debug' => IS_MODE_DEBUG,
