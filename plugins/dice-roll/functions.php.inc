@@ -52,16 +52,16 @@ function set_utf8_ja($timezone = 'Asia/Tokyo')
  */
 function dice_roll($dice_code)
 {
-    $param = explode("D", strtoupper(trim($dice_code)));
-    
-    $sum = 0;
+    $param  = explode("D", strtoupper(trim($dice_code)));
+    $sum    = 0;
     $result = array();
-    $times = intval($param[0]);
-    $max = intval($param[1]);
+    $times  = intval($param[0]);
+    $max    = intval($param[1]);
+
     for ($i = 0; $i < $times; $i++) {
         $result[] = rand(1, $max);
         $sum += end($result);
     }
-    
+
     return "Result: ".implode(" ", $result)."\nSum: ".$sum;
 }
