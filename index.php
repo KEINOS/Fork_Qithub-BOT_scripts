@@ -1,5 +1,5 @@
-<?php
-error_reporting(E_ALL);
+<?php error_reporting(E_ALL);
+
 /**
  * Front to the 「Qithub」 application.
  *
@@ -13,6 +13,11 @@ error_reporting(E_ALL);
  * @php version >=5.4.45
  */
 
+// 定数読み込み設定
+include_once('./includes/constants.php.inc');
+
+// 関数読み込み設定
+include_once('./includes/functions.php.inc');
 
 /* =====================================================================
     初期設定
@@ -20,18 +25,6 @@ error_reporting(E_ALL);
 
 // 言語設定->日本語 地域->東京 にセット
 set_utf8_ja('Asia/Tokyo');
-
-// 定数設定エリア
-define('IS_MODE_DEBUG', isset($_GET['mode']) and ($_GET['mode'] == 'debug'));
-define('IS_PROC_REGULAR', ! isset($_GET['process'])); // 定例処理
-define('IS_PROC_DEMAND', isset($_GET['process']));    // 随時処理
-define('DIR_SEP', DIRECTORY_SEPARATOR);
-define('BR_EOL', '<br>' . PHP_EOL);
-define('LOAD_DATA_EMPTY', false);
-define('SAVE_DATA_SUCCESS', true);
-define('SAVE_DATA_FAIL', false);
-define('TOOT_SUCCESS', true);
-define('TOOT_FAIL', false);
 
 // 'system' および 'plugin' が使えるプログラム言語
 $extension_types = [
@@ -43,18 +36,24 @@ $extension_types = [
     メイン
    ===================================================================== */
 
-/* ---------------------------------
-    定例処理
-   --------------------------------- */
+   /* ------------------------------------------------------------------
+       定例処理
+
+       cron により5分おきに実行される内容です。
+   --------------------------------------------------------------------- */
 if (IS_PROC_REGULAR) {
     echo "定例処理を行う予定（in progress）";
-    //TODO 最新Qiita記事の取得
+    /** TODO 最新Qiita記事の取得 */
 } else {
-/* ---------------------------------
-    随時処理
-    クエリの'process'値で分岐処理
-   --------------------------------- */
+   /* ------------------------------------------------------------------
+       随時処理 / 臨時処理
+
+       WebHook や テスト用にダイレクトに実行される内容です。
+       各処理は、リクエストされたクエリの'process'値で分岐処理されます。
+   --------------------------------------------------------------------- */
     switch (strtolower($_GET['process'])) {
+        // 'github'
+        // -------------------------------------------------------------
         // GitHub からの WebHook 処理
         // クエリの'method'オプションが指定されていない場合は受け取った
         // データを保存。'method'オプションによって保存データの閲覧・削
@@ -129,6 +128,8 @@ if (IS_PROC_REGULAR) {
 
             break;
 
+        // 'sample'
+        // -------------------------------------------------------------
         // BOT のトリガーテスト（プロセス）の動作サンプル
         //
         // 基本スクリプトでデータ保存・読み込みを行う。データの保存自体
@@ -149,6 +150,8 @@ if (IS_PROC_REGULAR) {
             print_r($result);
             break;
 
+        // 'say-hello-world'
+        // -------------------------------------------------------------
         // 'plugins/say-hello-world' を利用したサンプル
         //
         // 'system/data-io','system/delete-toot','system/post-toot'の
@@ -211,6 +214,8 @@ if (IS_PROC_REGULAR) {
 
             break;
 
+        // 'get-qiita-new-items'
+        // -------------------------------------------------------------
         // Qiita記事の新着N件を表示するサンプル
         //
         // クエリのパラメーター'max_items'が指定されている場合はその件数
@@ -232,11 +237,15 @@ if (IS_PROC_REGULAR) {
             $result     = decode_api_to_array($result_api);
 
             if ($result['result']) {
+                echo '<pre>';
                 print_r($result);
+                echo '</pre>';
             }
 
             break;
 
+        // 'toot-daily'
+        // -------------------------------------------------------------
         // 日付ごとのスレッドでトゥートするサンプル
         //
         // 定例処理用のプロトタイプ。トゥートした日付の初トゥートの場合
@@ -345,8 +354,19 @@ if (IS_PROC_REGULAR) {
                 echo "Toot fail." . BR_EOL;
             }
 
-            break;
+            break; // EOF toot-daily
 
+        // 'toot-daily-qiita-items'
+        // -------------------------------------------------------------
+        // 日付ごとのスレッドで新着Qiita記事をトゥートするサンプル
+        // 'toot-daily' プロセスを新着Qiita記事のトゥートにカスタムした
+        // プロトタイプ。
+        case 'toot-daily-qiita-items':
+            include_once('./includes/toot-daily-qiita-items.php.inc');
+            break; //EOF toot-daily-qiita-items
+
+        // get-mastodon-user-info
+        // -------------------------------------------------------------
         // マストドンのユーザーアカウントおよびフォロワーの情報を表示する
         //
         // 一度取得した情報はキャッシュされる。リクエスト・パラメータ
@@ -409,384 +429,4 @@ if (IS_PROC_REGULAR) {
     }
 }
 
-die(); // END of MAIN
-
-/* =====================================================================
-    Functions
-   ===================================================================== */
-/**
- * 'system' および 'plugin' のスクリプトを実行します。
- *
- * 実行に必要なパラメーターは各スクリプトのディレクトリにある README.md
- * を参照して準拠してください。
- *
- * @param  string  $dir_name        スクリプトのディレクトリ名。
- *                                  エンドポイント名。
- *                                  'system/<script name>'
- *                                  'plugin/<script name>'
- * @param  array   $params          スクリプトに渡す配列（パラメーター）
- * @param  boolean $run_background  trueの場合、実行結果を待たずにバック
- *                                  グラウンドで実行します
- * @return json or boolean          バックグラウンド実行の場合は常にtrue
- */
-function run_script($dir_name, $params, $run_background = true)
-{
-    $lang_type = get_lang_type($dir_name);
-    $command   = get_cli_command(
-        $lang_type,
-        $dir_name,
-        $params
-    );
-
-    // Run as background script unless debug mode.
-    // NOTE: Be careful that commands are NOT single quoted
-    //       but grave accent aka backquote/backtick.
-    if ($run_background) {
-        $log    = `$command > /dev/null &`;
-        $result = 'OK';
-    } else {
-        $result = `$command`;
-    }
-
-    return $result;
-}
-
-/**
- *  URLエンコードされたJSONを配列にデコードします
- *
- * @param  string  $json_enc APIからのエンコード済み出力結果
- * @return array             デコード結果
- * @link https://github.com/Qithub-BOT/scripts/issues/16
- */
-function decode_api_to_array($json_enc)
-{
-    $json_raw  = urldecode($json_enc);
-    $array     = json_decode($json_raw, JSON_OBJECT_AS_ARRAY);
-
-    return $array;
-}
-
-/**
- *  配列をJSON & URLエンコードにエンコードします
- *
- *  'system'および'plugins'は、このデータ形式で入力を受け付けます。
- *
- * @param  array  $array_value スクリプトの実行言語（'php','python'）
- * @return string              エンコード結果
- * @link https://github.com/Qithub-BOT/scripts/issues/16
- */
-function encode_array_to_api($array_value)
-{
-    $array['is_mode_debug'] = IS_MODE_DEBUG;
-    $array['values']        = $array_value;
-
-    $json_raw = json_encode($array_value);
-    $json_enc = urlencode($json_raw);
-
-    return $json_enc;
-}
-
-/* ---------------------------------
-    ゲッター系 Functions
-   --------------------------------- */
-/**
- *  指定された 'system' および 'pugins' の スクリプトの実行言語を取得し
- *  ます。
- *
- *  第１引数に渡されたディレクトリ名より "main.xxx" の拡張子を調べ、該当
- *  する言語を返します。
- *
- * @param  string $dir_name  スクリプトのディレクトリ名
- * @return string            プログラム言語名。false の場合は引数に問題
- *                           があるか定義されていない拡張子が"main.xxxx"
- *                           に使われています。
- */
-function get_lang_type($dir_name)
-{
-    global $extension_types;
-
-    $path_basic = "./${dir_name}/main";
-
-    foreach ($extension_types as $lang => $ext) {
-        if (file_exists($path_basic . $ext)) {
-            $result_lang = $lang;
-            break;
-        } else {
-            debug_msg("Can't determine extension type. File not exist at '${path_basic}'.");
-            $result_lang = false;
-        }
-    }
-
-    return $result_lang;
-}
-
-/**
- * 各種API用に必要なキーの取得をします
- *
- * 第１引数に渡されたパスにあるJSON形式のCONFファイルの中から第２引数の
- * キーを持つ配列の値を返します。
- *
- * @param  string $path_file_conf
- * @param  string $name_conf
- * @return array
- */
-function get_api_keys($path_file_conf, $name_conf)
-{
-    $conf_json  = file_get_contents(trim($path_file_conf));
-    $conf_array = json_decode($conf_json, JSON_OBJECT_AS_ARRAY);
-    $keys_api   = $conf_array[$name_conf];
-
-    return $keys_api;
-}
-
-/**
- * 'system'および'plugins' を CLI (Command Line Interface)で実行するため
- * の Qithub 準拠のコマンドを生成します
- *
- * @param  string $lang_type   スクリプトの実行言語（'php','python'）
- * @param  string $name_script CLIで実行するスクリプトのパス
- * @param  string $array_value CLIでスクリプトに渡す引数の配列データ
- * @return string              CLI用のコマンド
- * @link https://github.com/Qithub-BOT/scripts/issues/16
- */
-function get_cli_command($lang_type, $dir_name, $array_value)
-{
-    $path_cli    = get_path_exe($lang_type);
-    $path_script = get_path_script($dir_name, $lang_type);
-    $argument    = encode_array_to_api($array_value);
-    $command     = "${path_cli} ${path_script} ${argument}";
-
-    return  $command;
-}
-
-
-/**
- * 'system' および 'plugins' のスクリプトの絶対パスを返します
- *
- * @param  string $dir_name    スクリプトのディレクトリ
- *                             'system/<script name>'
- *                             'plugin/<script name>'
- * @param  string $lang_type   スクリプトの実行言語（'php','python',etc）
- * @return string              スクリプトの絶対パス
- */
-function get_path_script($dir_name, $lang_type)
-{
-    global $extension_types;
-
-    $ext = $extension_types[$lang_type];
-
-    $path_dir_scripts = '.' . DIR_SEP .$dir_name . DIR_SEP;
-    $path_file_script = $path_dir_scripts . 'main' . $ext;
-
-    if (! file_exists($path_file_script)) {
-        throw new Exception("不正なファイルパスの指定 ${path_file_script}");
-        $path_file_script = "./unknown_path";
-    } else {
-        $path_file_script = realpath($path_file_script);
-    }
-
-    return $path_file_script;
-}
-
-/**
- *  スクリプトを CLI で実行する際に必要なプログラム言語のパスを取得する
- *
- * @param  string $lang_type スクリプトの実行言語（'php','python',etc）
- * @return string            スクリプト言語のパス
- */
-function get_path_exe($lang_type)
-{
-    $lang_type = strtolower($lang_type);
-    switch ($lang_type) {
-        case 'php':
-            $path_cli = '/usr/bin/php'; // PHP7 .0.22 cli
-            break;
-        default:
-            throw new Exception("不明なプログラム言語の指定 ${lang_type}");
-            $path_cli = null;
-            break;
-    }
-
-    return $path_cli;
-}
-/* ---------------------------------
-    Plugin Functions
-    'plugins/xxxxxx'のQithub API ラッパー
-   --------------------------------- */
-function delete_toot($params)
-{
-    $result_api = run_script('system/delete-toot', $params, false);
-    $result     = decode_api_to_array($result_api);
-
-    return  ( $result['result'] == 'OK' );
-}
-
-function post_toot($params)
-{
-    $result_api = run_script('system/post-toot', $params, false);
-    $result     = decode_api_to_array($result_api);
-
-    return  ( $result['result'] == 'OK' ) ? $result : false;
-}
-
-
-/* ---------------------------------
-    DATA I/O Functions
-    'system/data-io'のQithub API ラッパー
-   --------------------------------- */
-/**
- *  データの読み込みをします
- *
- * @param  string  $id_data 保存したデータのキー
- * @return mixed            保存したデータ
- */
-function load_data($id_data)
-{
-    $params   = [
-        'command' => 'load',
-        'id'      => $id_data,
-    ];
-    $result_api = run_script('system/data-io', $params, false);
-    $result     = decode_api_to_array($result_api);
-    if ($result['result'] == 'OK') {
-        return $result['value'];
-    } else {
-        $msg_error =<<<EOL
-【読み込みエラー】
-Data ID：'${id_data}' でのデータ読み込み時にエラーが発生しました。<br>
-【エラー内容】${result['value']}
-EOL;
-        debug_msg($msg_error);
-        return LOAD_DATA_EMPTY;
-    }
-}
-
-/**
- *  データの書き込みをします
- *
- * @param  string  $id_data 保存したデータのキー
- * @param  mixed   $data    保存したいデータ
- * @return boolean          データの保存成功は true、失敗は false
- */
-function save_data($id_data, $data)
-{
-    $params = [
-        'command' => 'save',
-        'id'      => $id_data,
-        'value'   => $data,
-    ];
-    $result_api = run_script('system/data-io', $params, false);
-    $result     = decode_api_to_array($result_api);
-
-    return ($result['result'] == 'OK') ? SAVE_DATA_SUCCESS : SAVE_DATA_FAIL;
-}
-
-/**
- *  データの削除をします
- *
- * @param  string  $id_data 保存したデータのキー
- * @return boolean          削除されれば true
- */
-function delete_data($id_data)
-{
-    $params   = [
-        'command' => 'delete',
-        'id'      => $id_data,
-    ];
-    $result_api = run_script('system/data-io', $params, false);
-    $result     = decode_api_to_array($result_api);
-    if ($result['result'] == 'OK') {
-        return $result['value'];
-    } else {
-        throw new Exception("不正なデータIDです：\n ID：${id_data}\n 内容：${result['value']}");
-        return false;
-    }
-}
-
-/* ---------------------------------
-    環境／デバッグ用／その他 Functions
-   --------------------------------- */
-
-
-/**
- * with function.
- *
- * 定数の文字列内展開用関数
- *
- * @access public
- * @param mixed $v
- * @return mixed
- */
-function with($v)
-{
-    return $v;
-}
-$with = "with";
-
-/**
- * debug_msg function.
- *
- * デバッグモード（IS_MODE_DEBUG = true）時のみ、try, catchできるエラー
- * （E_USER_WARNING）出力関数。エラー発生元の取得も行う。
- *
- * @access public
- * @param mixed $str
- * @return void
- */
-function debug_msg($str)
-{
-    $with = "with";
-    if (IS_MODE_DEBUG) {
-        $line = debug_backtrace()[1]['line'];
-        //$line = print_r(debug_backtrace(),true);
-        trigger_error(
-            "${str}【呼び出し元】 ${line}行{$with(BR_EOL)}",
-            E_USER_WARNING
-        );
-    }
-}
-
-/**
- * echo_on_debug function.
- *
- * デバッグモード（IS_MODE_DEBUG = true）時のみ echo/print_r を返す関数。
- * 主にテスト動作で引数をチェックするなどに利用する。
- *
- * @access public
- * @param  mixed  $expression
- * @return void
- * @SuppressWarnings(PHPMD)
- */
-function echo_on_debug($expression)
-{
-    if (IS_MODE_DEBUG) {
-        if (is_string($expression)) {
-            echo "<pre>${expression}</pre>" . PHP_EOL;
-        } else {
-            echo '<pre>';
-            print_r($expression);
-            echo "</pre>" . PHP_EOL;
-        }
-    }
-}
-
-/**
- *  実行環境の言語を日本語に設定しタイムゾーンを設定する
- *
- * @param  string  $timezone デフォルトは東京
- * @return
- * @SuppressWarnings(PHPMD)
- */
-function set_utf8_ja($timezone = 'Asia/Tokyo')
-{
-    if (! function_exists('mb_language')) {
-        die('This application requires mb_language.');
-    }
-
-    date_default_timezone_set($timezone);
-    setlocale(LC_ALL, 'ja_JP');
-    mb_language('ja');
-    mb_internal_encoding('UTF-8');
-    mb_http_output('UTF-8');
-    ob_start("mb_output_handler");
-}
+// END of MAIN
