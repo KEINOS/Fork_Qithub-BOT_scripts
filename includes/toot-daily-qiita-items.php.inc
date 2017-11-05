@@ -29,16 +29,11 @@ $result_api = run_script(
 $qiita_items_new  = decode_api_to_array($result_api)['value'];
 $qiita_items_diff = array_diff_key($qiita_items_new, $qiita_items_old);
 
+// デバッグモード時の新着Qiita記事の差分確認用
 if (IS_MODE_DEBUG) {
-    echo '<h1>New item</h1><pre>';
-    echo_on_debug($qiita_items_new);
-    echo '</pre>';
-    echo '<h1>Old item</h1><pre>';
-    print_r($qiita_items_old);
-    echo '</pre>';
-    echo '<h1>Diff item</h1><pre>';
-    print_r($qiita_items_diff);
-    echo '</pre>';
+    echo_on_debug($qiita_items_new, 'New item');
+    echo_on_debug($qiita_items_old, 'Old item');
+    echo_on_debug($qiita_items_diff, 'Diff item');
 }
 
 // 今日の日付をトゥート日のIDとして取得
