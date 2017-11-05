@@ -434,7 +434,7 @@ if (IS_PROC_REGULAR) {
         //   '&max='       ：サイコロの最大出目
         //   '&dicecode='  ：ダイスコード
         //   '&mode=debug' ：デバッグモード（詳細表示）
-       case 'dice-roll':
+        case 'dice-roll':
             // Number of fling（サイコロを振る回数）
             $times = '1';
             if (isset($_GET['times']) && is_numeric($_GET['times']) && ! empty($_GET['times'])) {
