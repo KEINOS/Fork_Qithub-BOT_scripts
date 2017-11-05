@@ -5,7 +5,7 @@
 
 /**
  * run_script function.
- * 
+ *
  * Qithub API に準拠した 'system' および 'plugin' のスクリプトを実行（指
  * 定されたエンドポイント先の`main.xxx`を実行）します。
  *
@@ -18,7 +18,7 @@
  *                                  'system/<script name>'
  *                                  'plugin/<script name>'
  * @param  array   $params          スクリプトに渡す配列（パラメーター）
- * @param  bool    $run_background (default: true) 
+ * @param  bool    $run_background (default: true)
  *                                  バッグクランド実行オプション。trueを
  *                                  指定した場合、実行結果を待たずにバッ
  *                                  クグラウンドで実行します
@@ -44,7 +44,6 @@ function run_script($dir_name, $params, $run_background = true)
         ];
         $json_raw = json_encode($array_value);
         $result   = urlencode($json_raw);
-
     } else {
         $result = `$command`;
     }
@@ -73,7 +72,7 @@ function decode_api_to_array($json_enc)
 
 /**
  * encode_array_to_api function.
- * 
+ *
  * 配列を Qithub API データフォーマット（JSON & URLエンコード）にエンコー
  * ドします
  *
@@ -100,7 +99,7 @@ function encode_array_to_api($array_value)
    --------------------------------------------------------------------- */
 /**
  * get_lang_type function.
- * 
+ *
  * 指定された 'system' および 'pugins' の スクリプトの実行言語を取得しま
  * す。第１引数に渡されたディレクトリ名より "main.xxx" の拡張子を調べ、
  * 該当する言語を返します。
@@ -132,7 +131,7 @@ function get_lang_type($dir_name)
 
 /**
  * get_api_keys function.
- * 
+ *
  * 各種API用に必要な各種キーの取得をします
  *
  * 第１引数に渡されたパスにあるJSON形式のCONFファイルの中から第２引数の
@@ -175,7 +174,7 @@ function get_cli_command($lang_type, $dir_name, $array_value)
 
 /**
  * get_path_script function.
- * 
+ *
  * 'system' および 'plugins' 内の実行スクリプト（main.???まで）の絶対パス
  * を返します。
  *
@@ -207,7 +206,7 @@ function get_path_script($dir_name, $lang_type)
 
 /**
  * get_path_exe function.
- * 
+ *
  * `systems` および `plugins` 内の各々のスクリプトを CLI で実行する際に
  * 必要なプログラム言語のパスを取得する
  *
@@ -248,7 +247,7 @@ function get_path_exe($lang_type)
  *      'access_token' => $keys_api['access_token'],
  *      'id'           => $id_toot,
  *   ]);
- * 
+ *
  * @access public
  * @param  array  $params
  * @return bool
@@ -277,7 +276,7 @@ function delete_toot($params)
  *       'access_token' => $keys_api['access_token'],
  *       'visibility'   => 'unlisted',
  *   ]);
- * 
+ *
  * @access public
  * @param  array  $params
  * @return mixed           Mastodon API からのトゥート結果。失敗した場合
@@ -305,7 +304,7 @@ function post_toot($params)
    --------------------------------------------------------------------- */
 /**
  * load_data function.
- * 
+ *
  * 指定されたキーの保存データの読み込みをします
  *
  * @access public
@@ -335,7 +334,7 @@ EOL;
 
 /**
  * save_data function.
- * 
+ *
  * 指定されたキーで、データの保存をします
  *
  * @access public
@@ -358,7 +357,7 @@ function save_data($id_data, $data)
 
 /**
  * delete_data function.
- * 
+ *
  * 指定されたキーのデータを削除をします
  *
  * @access public

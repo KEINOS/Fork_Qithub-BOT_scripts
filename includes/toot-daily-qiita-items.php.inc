@@ -113,7 +113,6 @@ EOL;
 if (! $is_new_toot && ! empty($id_toot_current) && ! empty($qiita_items_diff)) {
     // 新着の差分をループしてトゥート
     foreach ($qiita_items_diff as $item) {
-
         // Qiita記事の情報代入と初期化
         $item_title  = $item['title'];
         $item_url    = $item['url'];
@@ -127,15 +126,15 @@ if (! $is_new_toot && ! empty($id_toot_current) && ! empty($qiita_items_diff)) {
             $s = str_replace('.', '', $s);
             $s = str_replace('-', '_', $s);
             $s = trim($s);
-            
+
             // タグの追加
             $item_tags .= "#${s} ";
 
             $is_item_test = (is_tag_test($s) && ! $is_tag_test) ?: $is_tag_test;
         }
-        
+
         // テスト記事ならトゥートをスキップ
-        if ($is_item_test){
+        if ($is_item_test) {
             continue;
         }
 
