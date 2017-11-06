@@ -4,10 +4,10 @@
 
 Qithub の BOT が各種**APIサービスを利用するために必要な情報**や稼働環境の設定をまとめたJSONファイルのサンプルです。ファイルをコピー＆リネームして利用します。
 
-JSONファイルの構成は以下の通りです。
+JSONファイルの構成／キーは以下の通りです。
 
 - "environment"
-    - "is_env_dpy"：本番環境（DEPLOY）なら"yes"／開発・テスト環境（DEVELOP）なら"no"
+    - "is_env_dev"：開発・テスト環境（DEVELOP）なら"yes"／本番環境（DEPLOY）なら"no"
 - "mastodon_api"
     - 'access_token'：本稼働用のアクセストークン
     - 'access_token_dev'：開発・テスト環境用アクセストークン
@@ -27,6 +27,7 @@ Qithub BOT を稼働させる前に必要事項を記入してください。
 **WEBからアクセスできない階層に設置**し、index.php の「初期設定」項目にある`set_env_file()`関数の引数に相対パス（もしくは絶対パス）で設置先を指定してください。
 
 ### 設定例
+
 ```
 set_env_file('../../qithub.conf.json');
 ```

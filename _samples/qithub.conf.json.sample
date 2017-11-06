@@ -1,17 +1,17 @@
 {
-    "environment": {
-        "is_env_dpy": "no"
+    "environment" : {
+        "is_env_dev" : "yes"
     },
-    "mastodon_api": {
-        "access_token"    : "",
-        "access_token_dev": ""
+    "mastodon_api" : {
+        "access_token"     : "",
+        "access_token_dev" : ""
     },
-    "qiita_api": {
-        "access_token"    : "",
-        "access_token_dev": ""
+    "qiita_api" : {
+        "access_token"     : "",
+        "access_token_dev" : ""
     },
-    "github_api": {
-        "access_token"    : "",
-        "access_token_dev": ""
+    "github_api" : {
+        "access_token"     : "",
+        "access_token_dev" : ""
     }
 }
