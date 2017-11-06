@@ -22,11 +22,15 @@ include_once('./includes/functions.php.inc');
 /* =====================================================================
     初期設定
    ===================================================================== */
-
 // 言語設定->日本語 地域->東京 にセット
 set_utf8_ja('Asia/Tokyo');
 
-// 'system' および 'plugin' が使えるプログラム言語
+// 環境設定・APIトークンなどのJSONファイルを指定
+// DEV環境の場合は、このJSONファイルに記述してください。設定方法は
+// './_samples/README.md'を参照してください。
+set_env_file('../../qithub.conf.json');
+
+// 'system' および 'plugin' で使えるサーバー側のプログラム言語（CLI）
 $extension_types = [
         'php'=>'.php',
         'python' =>'.py',
@@ -167,7 +171,7 @@ if (IS_PROC_REGULAR) {
             $has_pre_toot = ($id_pre_toot !== LOAD_DATA_EMPTY);
 
             // トゥートに必要なAPIの取得
-            $keys_api = get_api_keys('../../qithub.conf.json', 'qiitadon');
+            $keys_api = get_api_keys('../../qithub.conf.json', 'qiitadon_dev');
 
             // 前回トゥートを削除
             $msg_toot_deleted = '';
@@ -424,7 +428,7 @@ if (IS_PROC_REGULAR) {
 
             break;
 
-        // 'roll-dice'
+        // 'dice-roll'
         // -------------------------------------------------------------
         // サイコロを振った結果と合計を表示するプラグイン（ PR #38）の
         // 動作テスト。
@@ -432,9 +436,9 @@ if (IS_PROC_REGULAR) {
         // クエリの引数オプション
         //   '&times='     ：振る回数
         //   '&max='       ：サイコロの最大出目
-        //   '&dice_code=' ：ダイスコード
+        //   '&dicecode='  ：ダイスコード
         //   '&mode=debug' ：デバッグモード（詳細表示）
-        case 'roll-dice':
+        case 'dice-roll':
             // Number of fling（サイコロを振る回数）
             $times = '1';
             if (isset($_GET['times']) && is_numeric($_GET['times']) && ! empty($_GET['times'])) {
@@ -445,15 +449,15 @@ if (IS_PROC_REGULAR) {
             if (isset($_GET['max']) && is_numeric($_GET['max']) && ! empty($_GET['max'])) {
                 $max_side = intval($_GET['max']);
             }
-            // Set 'dice_code'
-            $dicecode = isset($_GET['dice_code']) ? $_GET['dice_code'] : "${times}d${max_side}";
+            // Set 'dicecode'
+            $dicecode = isset($_GET['dicecode']) ? $_GET['dicecode'] : "${times}d${max_side}";
             // Set parameters for Qithub API
             $params = [
                 'is_mode_debug' => IS_MODE_DEBUG,
-                'dice_code'     => $dice_code,
+                'dicecode'      => $dicecode,
             ];
             // Request API
-            $result_api = run_script('plugins/roll-dice', $params, false);
+            $result_api = run_script('plugins/dice-roll', $params, false);
             $result     = decode_api_to_array($result_api);
 
             // Display result

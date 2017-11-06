@@ -93,6 +93,57 @@ function encode_array_to_api($array_value)
 
     return $json_enc;
 }
+/* ---------------------------------------------------------------------
+    セッター系 Functions
+   --------------------------------------------------------------------- */
+
+/**
+ * set_env_file function.
+ *
+ * 環境設定やAPIのトークンを記載したJSONファイルを読み込み、定数に設定し
+ * ます。
+ *
+ * @access public
+ * @param  string $path_file
+ * @return void
+ * @SuppressWarnings(PHPMD)
+ */
+function set_env_file($path_file)
+{
+    if (file_exists($path_file)) {
+        defined('')
+    } else {
+        $path_file = esc_html($path_file);
+        trigger_error(
+            "confファイルが存在しません。${path_file}",
+            E_USER_WARNING
+        );
+    }
+}
+
+/**
+ * set_utf8_ja function.
+ *
+ * 実行環境の言語を日本語に設定しタイムゾーンを設定する
+ *
+ * @access public
+ * @param string $timezone (default: 'Asia/Tokyo')
+ * @return void
+ * @SuppressWarnings(PHPMD)
+ */
+function set_utf8_ja($timezone = 'Asia/Tokyo')
+{
+    if (! function_exists('mb_language')) {
+        die('This application requires mb_language.');
+    }
+
+    date_default_timezone_set($timezone);
+    setlocale(LC_ALL, 'ja_JP');
+    mb_language('ja');
+    mb_internal_encoding('UTF-8');
+    mb_http_output('UTF-8');
+    ob_start("mb_output_handler");
+}
 
 /* ---------------------------------------------------------------------
     ゲッター系 Functions
@@ -290,7 +341,7 @@ function post_toot($params)
     $result_api = run_script($dir_name_api, $params, $run_background);
     $result     = decode_api_to_array($result_api);
 
-    if (($result['result'] !== 'OK') && IS_MODE_DEBUG) {
+    if (($result['result'] !== 'OK') && is_mode_debug()) {
         echo_on_debug($result_api, 'TOOT FAILED: Posted toot info');
     }
 
@@ -530,6 +581,21 @@ function with($value)
 $with = "with";
 
 /**
+ * is_mode_debug function.
+ * 
+ * デバッグモードの定数が bool であるため false が指定された場合に備えて
+ * 確実にチェックするための関数
+ *
+ * @access public
+ * @return void
+ * @url http://php.net/manual/ja/function.defined.php#121433
+ */
+function is_mode_debug()
+{
+    return defined('IS_MODE_DEBUG') && IS_MODE_DEBUG;
+}
+
+/**
  * debug_msg function.
  *
  * デバッグモード（IS_MODE_DEBUG = true）時のみ、try, catchできるエラー
@@ -541,7 +607,7 @@ $with = "with";
  */
 function debug_msg($string)
 {
-    if (IS_MODE_DEBUG) {
+    if (is_mode_debug()) {
         $with   = "with";
         $string = esc_html($string);
         $line   = debug_backtrace()[1]['line'];
@@ -566,7 +632,7 @@ function debug_msg($string)
  */
 function echo_on_debug($expression, $title = '')
 {
-    if (IS_MODE_DEBUG) {
+    if (is_mode_debug()) {
         $title      = esc_html($title);
         $expression = esc_html($expression);
 
@@ -584,26 +650,3 @@ function echo_on_debug($expression, $title = '')
     }
 }
 
-/**
- * set_utf8_ja function.
- *
- * 実行環境の言語を日本語に設定しタイムゾーンを設定する
- *
- * @access public
- * @param string $timezone (default: 'Asia/Tokyo')
- * @return void
- * @SuppressWarnings(PHPMD)
- */
-function set_utf8_ja($timezone = 'Asia/Tokyo')
-{
-    if (! function_exists('mb_language')) {
-        die('This application requires mb_language.');
-    }
-
-    date_default_timezone_set($timezone);
-    setlocale(LC_ALL, 'ja_JP');
-    mb_language('ja');
-    mb_internal_encoding('UTF-8');
-    mb_http_output('UTF-8');
-    ob_start("mb_output_handler");
-}
