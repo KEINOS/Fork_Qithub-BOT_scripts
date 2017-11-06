@@ -118,6 +118,7 @@ function set_env_file($path_file)
             "confファイルが存在しません。${path_file}",
             E_USER_WARNING
         );
+        die();
     }
 }
 
@@ -633,19 +634,18 @@ function debug_msg($string)
 function echo_on_debug($expression, $title = '')
 {
     if (is_mode_debug()) {
-        $title      = esc_html($title);
-        $expression = esc_html($expression);
 
         if (! empty($title)) {
+            $title = esc_html($title);
             $title = "<h1>${title}</h1>";
         }
 
         if (is_string($expression)) {
+            $expression = esc_html($expression);
             echo "<div>${title}<pre>${expression}</pre></div>" . PHP_EOL;
         } else {
-            echo '<div><pre>';
-            print_r($expression);
-            echo "</pre></div>" . PHP_EOL;
+            $expression = esc_html(print_r($expression,true));
+            echo "<div>${title}<pre>${expression}</pre></div>" . PHP_EOL;
         }
     }
 }
