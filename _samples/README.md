@@ -6,15 +6,15 @@ Qithub の BOT が各種**APIサービスを利用するために必要な情報
 
 JSONファイルの構成は以下の通りです。
 
-- "ENVIRONMENT"
+- "environment"
     - "is_env_dpy"：本番環境（DEPLOY）なら"yes"／開発・テスト環境（DEVELOP）なら"no"
-- "MASTODON_API"
+- "mastodon_api"
     - 'access_token'：本稼働用のアクセストークン
     - 'access_token_dev'：開発・テスト環境用アクセストークン
-- "QIITA_API"
+- "qiita_api"
     - 'access_token'：本稼働用のアクセストークン
     - 'access_token_dev'：開発・テスト環境用アクセストークン
-- "GITHUB_API"
+- "github_api"
     - 'access_token'：本稼働用のアクセストークン
     - 'access_token_dev'：開発・テスト環境用アクセストークン
 
