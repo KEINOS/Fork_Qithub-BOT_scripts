@@ -23,11 +23,11 @@ include_once('./includes/functions.php.inc');
     初期設定
    ===================================================================== */
 // 言語設定->日本語 地域->東京 にセット
-set_utf8_ja('Asia/Tokyo');
+set_env_utf8_ja('Asia/Tokyo');
 
-// 環境設定・APIトークンなどのJSONファイルを指定
-// DEV環境の場合は、このJSONファイルに記述してください。設定方法は
-// './_samples/README.md'を参照してください。
+// DEV/DPYの環境設定・APIトークンなどを設定
+// 引数に設定ファイル（'qithub.conf.json'）までのパスを指定してください。
+// 設定方法は'./_samples/README.md'を参照してください。
 set_env_file('../../qithub.conf.json');
 
 // 'system' および 'plugin' で使えるサーバー側のプログラム言語（CLI）

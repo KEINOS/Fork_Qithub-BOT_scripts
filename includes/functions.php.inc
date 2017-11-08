@@ -100,18 +100,36 @@ function encode_array_to_api($array_value)
 /**
  * set_env_file function.
  *
- * 環境設定やAPIのトークンを記載したJSONファイルを読み込み、定数に設定し
- * ます。
+ * 環境設定やAPIのトークンを定数に設定します。引数で指定されたJSONファイ
+ * ルを読み込んで内容を設定します。
  *
  * @access public
- * @param  string $path_file
+ * @param  string $path_file_conf
  * @return void
  * @SuppressWarnings(PHPMD)
  */
-function set_env_file($path_file)
+function set_env_file($path_file_conf)
 {
-    if (file_exists($path_file)) {
-        defined('')
+    if (file_exists($path_file_conf)) {
+        $conf_json  = file_get_contents(trim($path_file_conf));
+        $conf_array = json_decode($conf_json, JSON_OBJECT_AS_ARRAY);
+        
+        if( isset($conf_array['environment']['is_env_dev'])){
+            $is_env_dev = $conf_array['environment']['is_env_dev'];            
+        }
+
+        if('yes' == $is_env_dev){
+            $mastodon = $conf_array['mastodon_api']['access_token_dev'];
+            $qiita    = $conf_array['qiita_api']['access_token_dev'];
+            $github   = $conf_array['github_api']['access_token_dev'];
+            defined('ACCESS_TOKEN_MASTODON') or define('ACCESS_TOKEN_MASTODON', $mastodon);
+            defined('ACCESS_TOKEN_QIITA') or define('ACCESS_TOKEN_QIITA', $qiita);
+            defined('ACCESS_TOKEN_GITHUB') or define('ACCESS_TOKEN_GITHUB', $github);
+            defined('IS_SET_ENV') or define('IS_SET_ENV', true);
+        } else{
+            defined('IS_SET_ENV') or define('IS_SET_ENV', false);
+        }
+
     } else {
         $path_file = esc_html($path_file);
         trigger_error(
@@ -123,7 +141,7 @@ function set_env_file($path_file)
 }
 
 /**
- * set_utf8_ja function.
+ * set_env_utf8_ja function.
  *
  * 実行環境の言語を日本語に設定しタイムゾーンを設定する
  *
@@ -132,7 +150,7 @@ function set_env_file($path_file)
  * @return void
  * @SuppressWarnings(PHPMD)
  */
-function set_utf8_ja($timezone = 'Asia/Tokyo')
+function set_env_utf8_ja($timezone = 'Asia/Tokyo')
 {
     if (! function_exists('mb_language')) {
         die('This application requires mb_language.');
@@ -462,17 +480,19 @@ function esc_html($string)
 /**
  * isValid_url function.
  *
- * 有効なURLかを返す。主にQiitadonユーザーが存在するかの確認に利用。
+ * 引数のURLが有効なアドレスかを返す。
+ * 主にQiitadonユーザーが存在するか（ユーザーページが存在するか）の確認
+ * に利用。QiitadonAPI でチェックするにはオーバーヘッドが多く面倒なため。
  *
  * @access public
- * @param mixed $sUrl
- * @return void
+ * @param  mixed $sUrl
+ * @return bool
  */
 function isValid_url($sUrl)
 {
     if (( $sResponce = @file_get_contents($sUrl) ) == false) {
         // HTTPステータスコードを取得する
-        list($version,$status_code,$msg) = explode(' ', $http_response_header[0], 3);
+        list($version, $status_code, $msg) = explode(' ', $http_response_header[0], 3);
         // ステータスコードごとの処理
         switch ($status_code) {
             case 404:
@@ -488,6 +508,29 @@ function isValid_url($sUrl)
         //正常にfile_get_contentsで取得できた場合の処理
         //echo "OK: {$sResponce}";
         return true;
+    }
+}
+
+/**
+ * isValid_hash function.
+ * 
+ * 指定桁数の半角英数字であるかのチェック結果を返す。
+ * 問題なし： IS_VALID_HASH（ture）
+ * 問題あり： IS_INVALID_HASH（false）
+ * 主にアクセストークンの利用前のフォーマットのチェック用で有効なアクセ
+ * ストークン（実際に使えるか否）かは確認しない。
+ * 
+ * @access public
+ * @param  mixed  $value_hash
+ * @param  int    $len_hash (default: 64)
+ * @return bool   IS_INVALID_HASH, IS_VALID_HASH
+ */
+function isValid_hash($value_hash, $len_hash = 64)
+{
+    if( strlen($value_hash) == $len_hash && ctype_xdigit($value_hash) ){
+        return IS_VALID_HASH;
+    }else{
+        return IS_INVALID_HASH;
     }
 }
 
@@ -649,4 +692,3 @@ function echo_on_debug($expression, $title = '')
         }
     }
 }
-
