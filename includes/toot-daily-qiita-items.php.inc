@@ -5,7 +5,7 @@ $result_toot = TOOT_FAIL;
 // トゥートに必要なAPIの取得
 $keys_api     = get_api_keys('../../qithub.conf.json', 'qiitadon');
 $domain       = $keys_api['domain'];
-$access_token = $keys_api['access_token'];
+$access_token = ACCESS_TOKEN_MASTODON;
 
 // トゥート済みのトゥートIDとトゥート日の読み込み
 $id_data_toot = 'toot_id_and_date_of_daily_toot';

@@ -179,7 +179,7 @@ if (IS_PROC_REGULAR) {
             if ($has_pre_toot) {
                 $is_toot_deleted = delete_toot([
                     'domain'       => $keys_api['domain'],
-                    'access_token' => $keys_api['access_token'],
+                    'access_token' => ACCESS_TOKEN_MASTODON,
                     'id'           => $id_pre_toot,
                 ]);
                 $msg_toot_deleted = ( $is_toot_deleted ) ? "Last toot has been deleted.\n" : "Error deleting toot.\n";
@@ -201,7 +201,7 @@ if (IS_PROC_REGULAR) {
                 $result_toot = post_toot([
                     'status'       => $result['value'],
                     'domain'       => $keys_api['domain'],
-                    'access_token' => $keys_api['access_token'],
+                    'access_token' => ACCESS_TOKEN_MASTODON,
                     'visibility'   => 'unlisted',
                 ]);
 
@@ -296,7 +296,7 @@ if (IS_PROC_REGULAR) {
                 $params = [
                     'status'       => $msg,
                     'domain'       => $keys_api['domain'],
-                    'access_token' => $keys_api['access_token'],
+                    'access_token' => ACCESS_TOKEN_MASTODON,
                     'visibility'   => 'unlisted',
                 ];
 
@@ -322,7 +322,7 @@ if (IS_PROC_REGULAR) {
                 $params = [
                     'status'         => $msg,
                     'domain'         => $keys_api['domain'],
-                    'access_token'   => $keys_api['access_token'],
+                    'access_token'   => ACCESS_TOKEN_MASTODON,
                     'in_reply_to_id' => $id_toot_current,
                     'visibility'     => 'unlisted',
                 ];
@@ -366,6 +366,8 @@ if (IS_PROC_REGULAR) {
         // 'toot-daily' プロセスを新着Qiita記事のトゥートにカスタムした
         // プロトタイプ。
         case 'toot-daily-qiita-items':
+            echo(ACCESS_TOKEN_MASTODON);
+            die;
             include_once('./includes/toot-daily-qiita-items.php.inc');
             break; //EOF toot-daily-qiita-items
 
@@ -395,7 +397,7 @@ if (IS_PROC_REGULAR) {
             // 基本のパラメーター設定
             $params = [
                 'domain'       => $keys_api['domain'],
-                'access_token' => $keys_api['access_token'],
+                'access_token' => ACCESS_TOKEN_MASTODON,
             ];
 
             // オプション・パラメーターの追加
