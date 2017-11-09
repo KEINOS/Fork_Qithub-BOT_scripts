@@ -366,8 +366,6 @@ if (IS_PROC_REGULAR) {
         // 'toot-daily' プロセスを新着Qiita記事のトゥートにカスタムした
         // プロトタイプ。
         case 'toot-daily-qiita-items':
-            echo(ACCESS_TOKEN_MASTODON);
-            die;
             include_once('./includes/toot-daily-qiita-items.php.inc');
             break; //EOF toot-daily-qiita-items
 
