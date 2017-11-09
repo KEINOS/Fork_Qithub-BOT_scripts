@@ -21,7 +21,7 @@ if (isset($_GET['max']) && is_numeric($_GET['max']) && ! empty($_GET['max'])) {
     $max_side = intval($_GET['max']);
 }
 // Set 'dice_code'
-$dicecode = isset($_GET['dice_code']) ? $_GET['dice_code'] : "${times}d${max_side}";
+$dice_code = isset($_GET['dice_code']) ? $_GET['dice_code'] : "${times}d${max_side}";
 // Set parameters for Qithub API
 $params = [
     'is_mode_debug' => IS_MODE_DEBUG,
