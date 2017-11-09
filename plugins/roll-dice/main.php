@@ -24,8 +24,11 @@ $arg = get_api_input_as_array();
 // ダイスコードを取得
 $dice_code = $arg['dice_code'];
 
+// emoji 出力のオプション取得
+$use_emoji = (isset($arg['use_emoji']) && ! empty($arg['use_emoji'])) ? $arg['use_emoji'] : '';
+
 // メッセージの作成（RAW）
-$msg_raw = roll_dice($dice_code);
+$msg_raw = roll_dice($dice_code, $use_emoji);
 
 // API準拠の出力結果作成
 $msg_api = [

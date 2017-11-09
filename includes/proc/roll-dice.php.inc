@@ -20,12 +20,18 @@ $max_side = '6';
 if (isset($_GET['max']) && is_numeric($_GET['max']) && ! empty($_GET['max'])) {
     $max_side = intval($_GET['max']);
 }
+// Get result as emoji（サイコロの出目を emoji）
+$use_emoji = 'no';
+if (isset($_GET['use_emoji']) && ($_GET['use_emoji']=='yes')) {
+    $use_emoji = 'yes';
+}
 // Set 'dice_code'
 $dice_code = isset($_GET['dice_code']) ? $_GET['dice_code'] : "${times}d${max_side}";
 // Set parameters for Qithub API
 $params = [
     'is_mode_debug' => IS_MODE_DEBUG,
     'dice_code'     => $dice_code,
+    'use_emoji'     => $use_emoji,
 ];
 // Request API
 $result_api = run_script('plugins/roll-dice', $params, false);
