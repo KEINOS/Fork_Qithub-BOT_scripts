@@ -24,7 +24,7 @@ $qiita_items_old = load_data($id_data_qiita);
 $qiita_items_old = ( $qiita_items_old == LOAD_DATA_EMPTY ) ? array() : $qiita_items_old;
 
 // 動作確認用の要素の削除
-//unset($qiita_items_old['cf93b63acc8a313c88bb']);
+//unset($qiita_items_old['9412acb2a7ff37ff9ad0']);
 
 // 最新の新着Qiita記事の取得とトゥート済みの比較（差分取得）
 $max_items  = 10;
