@@ -62,10 +62,8 @@ if (IS_PROC_REGULAR) {
     switch (strtolower($_GET['process'])) {
         // 'github'
         // -------------------------------------------------------------
-        // GitHub からの WebHook 処理
-        // クエリの'method'オプションが指定されていない場合は受け取った
-        // データを保存。'method'オプションによって保存データの閲覧・削
-        // 除を行う
+        // GitHub からの WebHook の受け取りテスト（内容の保存と確認）
+        // クエリの'method'オプションによって保存データの閲覧・削除可能
         case 'github':
             include_once('./includes/github.php.inc');
             break;
