@@ -677,7 +677,7 @@ function is_mode_debug()
  */
 function is_env_dev()
 {
-    return defined('IS_ENV_DEV') && defined('DEV') && (IS_ENV_DEV === DEV);
+    return defined('IS_ENV_DEV') && (IS_ENV_DEV === true);
 }
 
 /**
