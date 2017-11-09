@@ -126,8 +126,10 @@ function set_env_file($path_file_conf)
             defined('ACCESS_TOKEN_QIITA') or define('ACCESS_TOKEN_QIITA', $qiita);
             defined('ACCESS_TOKEN_GITHUB') or define('ACCESS_TOKEN_GITHUB', $github);
             defined('IS_SET_ENV') or define('IS_SET_ENV', true);
+            defined('IS_ENV_DEV') or define('IS_ENV_DEV', true);
         } else {
             defined('IS_SET_ENV') or define('IS_SET_ENV', false);
+            defined('IS_ENV_DEV') or define('IS_ENV_DEV', false);
         }
     } else {
         $path_file = esc_html($path_file);
@@ -630,12 +632,27 @@ $with = "with";
  * 確実にチェックするための関数
  *
  * @access public
- * @return void
+ * @return bool
  * @url http://php.net/manual/ja/function.defined.php#121433
  */
 function is_mode_debug()
 {
     return defined('IS_MODE_DEBUG') && IS_MODE_DEBUG;
+}
+
+/**
+ * is_env_dev function.
+ *
+ * 実行環境が DEVELOP（true）か DEPLOY（false）かを返す。
+ * 環境設定ファイル（qithub.conf.json）で指定され、set_env_file()で定義
+ * される定数が false の場合に備えて、確実にチェックするための関数。
+ *
+ * @access public
+ * @return bool
+ */
+function is_env_dev()
+{
+    return defined('IS_ENV_DEV') && IS_ENV_DEV;
 }
 
 /**

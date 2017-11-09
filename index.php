@@ -363,8 +363,6 @@ if (IS_PROC_REGULAR) {
         // 'toot-daily-qiita-items'
         // -------------------------------------------------------------
         // 日付ごとのスレッドで新着Qiita記事をトゥートするサンプル
-        // 'toot-daily' プロセスを新着Qiita記事のトゥートにカスタムした
-        // プロトタイプ。
         case 'toot-daily-qiita-items':
             include_once('./includes/toot-daily-qiita-items.php.inc');
             break; //EOF toot-daily-qiita-items
