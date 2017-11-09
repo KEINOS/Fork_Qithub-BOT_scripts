@@ -104,7 +104,7 @@ if (IS_PROC_REGULAR) {
             include_once('./includes/toot-daily-qiita-items.php.inc');
             break;
 
-        // get-mastodon-user-info
+        // 'get-mastodon-user-info'
         // -------------------------------------------------------------
         // マストドンのユーザーアカウントおよびフォロワーの情報を表示する
         //
