@@ -1,5 +1,41 @@
 <?php
 /* ---------------------------------------------------------------------
+    Main Function
+   ------------------------------------------------------------------ */
+/**
+ * roll_dice function.
+ *
+ * Decode then curiculate dice code
+ *
+ * @access public
+ * @param  string $dice_code
+ * @return array
+ */
+function roll_dice($dice_code)
+{
+    $dice_code = (string) $dice_code;
+
+    $param = explode('D', strtoupper(trim($dice_code)));
+    $sum   = 0;
+    $roll  = array();
+    $times = intval($param[0]);
+    $max   = intval($param[1]);
+
+    for ($i = 0; $i < $times; $i++) {
+        $roll[] = convert_num_to_emoji(rand(1, $max));
+        $sum += end($roll);
+    }
+
+    // $roll = implode(" ", $roll);
+    $result = [
+        'roll' => $roll,
+        'sum'  => $sum,
+    ];
+
+    return $result;
+}
+
+/* ---------------------------------------------------------------------
     Getter Functions
    ------------------------------------------------------------------ */
 function get_api_input_as_array()
@@ -47,27 +83,30 @@ function set_utf8_ja($timezone = 'Asia/Tokyo')
     ob_start("mb_output_handler");
 }
 
+
 /**
- * Decode and curiculating dice code
+ * convert_num_to_emoji function.
+ *
+ * サイコロの数字を emoji に変換して返す
+ *
+ * @access public
+ * @param  mixed  $str
+ * @return void
  */
-function roll_dice($dice_code)
+function convert_num_to_emoji($str)
 {
-    $param = explode('D', strtoupper(trim($dice_code)));
-    $sum   = 0;
-    $roll  = array();
-    $times = intval($param[0]);
-    $max   = intval($param[1]);
-
-    for ($i = 0; $i < $times; $i++) {
-        $roll[] = rand(1, $max);
-        $sum += end($roll);
-    }
-
-    // $roll = implode(" ", $roll);
-    $result = [
-        'roll' => $roll,
-        'sum'  => $sum,
+    $str = (str) $str;
+    $map = [
+        '0' => ':zero:',
+        '1' => ':one:',
+        '2' => ':two:',
+        '3' => ':three:',
+        '4' => ':four:',
+        '5' => ':five:',
+        '6' => ':six:',
+        '7' => ':seven:',
+        '8' => ':eight:',
+        '9' => ':nine:',
     ];
-
-    return $result;
+    return strtr($str, $map);
 }
