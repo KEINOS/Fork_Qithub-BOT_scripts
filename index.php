@@ -30,7 +30,7 @@ set_env_utf8_ja('Asia/Tokyo');
 // 設定方法は'./_samples/README.md'を参照してください。
 set_env_file('../../qithub.conf.json');
 
-// 実行環境を設定
+// 本スクリプトの実行環境を設定
 // DEV = DEVELOP（開発）環境, DPY = DEPLOY（本稼働）環境
 set_env_as(DEV);
 
