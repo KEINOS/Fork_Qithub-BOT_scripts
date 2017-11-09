@@ -23,4 +23,6 @@ define('DPY', 'deploy');
 // ACCESS_TOKEN_QIITA
 // ACCESS_TOKEN_GITHUB
 // IS_SET_ENV
-
+//
+// 以下の定数は'functions.php.inc'の`set_env_as()`で定義しています
+// IS_ENV_DEV
