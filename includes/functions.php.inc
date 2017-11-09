@@ -126,10 +126,8 @@ function set_env_file($path_file_conf)
             defined('ACCESS_TOKEN_QIITA') or define('ACCESS_TOKEN_QIITA', $qiita);
             defined('ACCESS_TOKEN_GITHUB') or define('ACCESS_TOKEN_GITHUB', $github);
             defined('IS_SET_ENV') or define('IS_SET_ENV', true);
-            defined('IS_ENV_DEV') or define('IS_ENV_DEV', true);
         } else {
             defined('IS_SET_ENV') or define('IS_SET_ENV', false);
-            defined('IS_ENV_DEV') or define('IS_ENV_DEV', false);
         }
     } else {
         $path_file = esc_html($path_file);
@@ -138,6 +136,34 @@ function set_env_file($path_file_conf)
             E_USER_WARNING
         );
         die();
+    }
+}
+
+/**
+ * set_env_as function.
+ * 
+ * 実行環境を DEVELOP（開発）か DEPLOY（本稼働）かを設定する。
+ *
+ * @access public
+ * @param  string $arg  DEV or DPY の定数で指定
+ * @return void
+ * @SuppressWarnings(PHPMD)
+ */
+function set_env_as($arg){
+    switch($arg){
+        case ( DEV === $arg ):
+            defined('IS_ENV_DEV') or define('IS_ENV_DEV', true);
+            break;
+        case ( DPY === $arg ):
+            defined('IS_ENV_DEV') or define('IS_ENV_DEV', false);
+            break;            
+        default:
+            $arg = esc_html($arg);
+            trigger_error(
+                "不正な環境設定値が渡されました。（${arg}）",
+                E_USER_WARNING
+            );
+            die;
     }
 }
 
@@ -643,16 +669,15 @@ function is_mode_debug()
 /**
  * is_env_dev function.
  *
- * 実行環境が DEVELOP（true）か DEPLOY（false）かを返す。
- * 環境設定ファイル（qithub.conf.json）で指定され、set_env_file()で定義
- * される定数が false の場合に備えて、確実にチェックするための関数。
+ * 実行環境が DEVELOP か DEPLOY かを返す。 DEVELOPの場合は true
+ * 定数'IS_ENV_AS'の定義が false の場合に備えて、確実にチェックするための関数。
  *
  * @access public
  * @return bool
  */
 function is_env_dev()
 {
-    return defined('IS_ENV_DEV') && IS_ENV_DEV;
+    return defined('IS_ENV_DEV') && defined('DEV') && (IS_ENV_DEV === DEV);
 }
 
 /**

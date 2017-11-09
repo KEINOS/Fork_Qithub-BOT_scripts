@@ -15,6 +15,8 @@ define('TOOT_SUCCESS', true);
 define('TOOT_FAIL', false);
 define('IS_VALID_HASH', true);
 define('IS_INVALID_HASH', false);
+define('DEV', 'develop');
+define('DPY', 'deploy');
 
 // 以下の定数は'functions.php.inc'の`set_env_file()`で定義しています
 // ACCESS_TOKEN_MASTODON

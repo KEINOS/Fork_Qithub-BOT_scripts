@@ -1,16 +1,16 @@
 {
-    "environment" : {
-        "is_env_dev" : "yes"
-    },
     "mastodon_api" : {
+        "domain"           : "qiitadon.com",
         "access_token"     : "",
         "access_token_dev" : ""
     },
     "qiita_api" : {
+        "domain"           : "qiita.com",
         "access_token"     : "",
         "access_token_dev" : ""
     },
     "github_api" : {
+        "domain"           : "github.com",
         "access_token"     : "",
         "access_token_dev" : ""
     }
