@@ -113,12 +113,12 @@ function set_env_file($path_file_conf)
     if (file_exists($path_file_conf)) {
         $conf_json  = file_get_contents(trim($path_file_conf));
         $conf_array = json_decode($conf_json, JSON_OBJECT_AS_ARRAY);
-        
-        if( isset($conf_array['environment']['is_env_dev'])){
-            $is_env_dev = $conf_array['environment']['is_env_dev'];            
+
+        if (isset($conf_array['environment']['is_env_dev'])) {
+            $is_env_dev = $conf_array['environment']['is_env_dev'];
         }
 
-        if('yes' == $is_env_dev){
+        if ('yes' == $is_env_dev) {
             $mastodon = $conf_array['mastodon_api']['access_token_dev'];
             $qiita    = $conf_array['qiita_api']['access_token_dev'];
             $github   = $conf_array['github_api']['access_token_dev'];
@@ -126,10 +126,9 @@ function set_env_file($path_file_conf)
             defined('ACCESS_TOKEN_QIITA') or define('ACCESS_TOKEN_QIITA', $qiita);
             defined('ACCESS_TOKEN_GITHUB') or define('ACCESS_TOKEN_GITHUB', $github);
             defined('IS_SET_ENV') or define('IS_SET_ENV', true);
-        } else{
+        } else {
             defined('IS_SET_ENV') or define('IS_SET_ENV', false);
         }
-
     } else {
         $path_file = esc_html($path_file);
         trigger_error(
@@ -513,13 +512,13 @@ function isValid_url($sUrl)
 
 /**
  * isValid_hash function.
- * 
+ *
  * 指定桁数の半角英数字であるかのチェック結果を返す。
  * 問題なし： IS_VALID_HASH（ture）
  * 問題あり： IS_INVALID_HASH（false）
  * 主にアクセストークンの利用前のフォーマットのチェック用で有効なアクセ
  * ストークン（実際に使えるか否）かは確認しない。
- * 
+ *
  * @access public
  * @param  mixed  $value_hash
  * @param  int    $len_hash (default: 64)
@@ -527,9 +526,9 @@ function isValid_url($sUrl)
  */
 function isValid_hash($value_hash, $len_hash = 64)
 {
-    if( strlen($value_hash) == $len_hash && ctype_xdigit($value_hash) ){
+    if (strlen($value_hash) == $len_hash && ctype_xdigit($value_hash)) {
         return IS_VALID_HASH;
-    }else{
+    } else {
         return IS_INVALID_HASH;
     }
 }
@@ -626,7 +625,7 @@ $with = "with";
 
 /**
  * is_mode_debug function.
- * 
+ *
  * デバッグモードの定数が bool であるため false が指定された場合に備えて
  * 確実にチェックするための関数
  *
@@ -677,7 +676,6 @@ function debug_msg($string)
 function echo_on_debug($expression, $title = '')
 {
     if (is_mode_debug()) {
-
         if (! empty($title)) {
             $title = esc_html($title);
             $title = "<h1>${title}</h1>";
@@ -687,7 +685,7 @@ function echo_on_debug($expression, $title = '')
             $expression = esc_html($expression);
             echo "<div>${title}<pre>${expression}</pre></div>" . PHP_EOL;
         } else {
-            $expression = esc_html(print_r($expression,true));
+            $expression = esc_html(print_r($expression, true));
             echo "<div>${title}<pre>${expression}</pre></div>" . PHP_EOL;
         }
     }
