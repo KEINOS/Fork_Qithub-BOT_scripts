@@ -8,7 +8,7 @@
  *
  * @copyright Qithub Organization All Rights Reserved
  * @license 2017/10/06 under discussion
- * @author @KEINOS@Qiitadon.com
+ * @author https://github.com/Qithub-BOT/scripts/graphs/contributors
  * @link https://github.com/Qithub-BOT/
  * @php version >=5.4.45
  */
@@ -42,7 +42,7 @@ $extension_types = [
 
 /* =====================================================================
     メイン
-
+   =====================================================================
     定例処理（IS_PROC_REGULAR）
         クエリのパラメーターのないリクエスト
     随時／臨時処理
