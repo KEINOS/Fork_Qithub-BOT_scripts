@@ -85,7 +85,7 @@ function decode_api_to_array($json_enc)
  */
 function encode_array_to_api($array_value)
 {
-    $array['is_mode_debug'] = IS_MODE_DEBUG;
+    $array['is_mode_debug'] = is_mode_debug();
     $array['values']        = $array_value;
 
     $json_raw = json_encode($array_value);
