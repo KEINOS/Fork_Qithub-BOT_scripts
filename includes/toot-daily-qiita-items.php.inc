@@ -75,9 +75,11 @@ if ($is_new_toot) {
     $date_today = date('Y/m/d H時');
     // CW文
     $spoiler_text = "${date_today} の新着Qiita記事のトゥートを始めるよ！";
+    // DEV環境の場合の付加メッセージ
+    $msg_additional = (is_env_dev()) ? "[#Qithub:DEV]\n" : '';
     // 本文
     $msg =<<<EOL
-このトゥートに「非公開」でトゥートしていくから、興味がある人はフォローしてね。
+${msg_additional}このトゥートに「非公開」でトゥートしていくから、興味がある人はフォローしてね。
 
 ただ、QiitadonのユーザーのQiita記事だった場合は「未収載」でトゥートするよ。
 また、「★（お気に入り）」や「ブースト」数が一定数超えたトゥートは「公開」で改めてトゥートするね。
