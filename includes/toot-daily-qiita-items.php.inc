@@ -2,7 +2,7 @@
 // プロセス 'toot-daily-qiita-items'
 // -------------------------------------------------------------
 // 日付ごとのスレッドで新着Qiita記事をトゥートする
-// 
+//
 // 'toot-daily' プロセスを新着Qiita記事のトゥートにカスタムした
 // プロトタイプ。
 
@@ -37,7 +37,7 @@ $qiita_items_new  = decode_api_to_array($result_api)['value'];
 $qiita_items_diff = array_diff_key($qiita_items_new, $qiita_items_old);
 
 // デバッグモード時の新着Qiita記事の差分確認用
-if (IS_MODE_DEBUG) {
+if (is_mode_debug()) {
     echo_on_debug($qiita_items_new, 'New item');
     echo_on_debug($qiita_items_old, 'Old item');
     echo_on_debug($qiita_items_diff, 'Diff item');
@@ -72,7 +72,7 @@ if ($info_toot !== LOAD_DATA_EMPTY) {
 //
 if ($is_new_toot) {
     // トゥート内容の作成
-    $date_today = date('Y/m/d H時    ');
+    $date_today = date('Y/m/d H時');
     // CW文
     $spoiler_text = "${date_today} の新着Qiita記事のトゥートを始めるよ！";
     // 本文
@@ -132,6 +132,7 @@ if (! $is_new_toot && ! empty($id_toot_current) && ! empty($qiita_items_diff)) {
             // タグの追加
             $item_tags .= "#${s} ";
 
+            // Qiita記事がテスト投稿（タグに「テスト」を含む）か確認
             $is_item_test = (is_tag_test($s) && ! $is_item_test) ?: $is_item_test;
         }
 
@@ -142,6 +143,9 @@ if (! $is_new_toot && ! empty($id_toot_current) && ! empty($qiita_items_diff)) {
 
         $item_tags = trim($item_tags);
 
+        // DEV環境の場合にはタグに追加
+        $item_tags_additional = (is_env_dev()) ? "[#Qithub:DEV]\n" : '';
+
         // トゥート内容の作成
         // Qiitadonユーザーの場合はメッセージ内容を変更
         //
@@ -151,10 +155,10 @@ if (! $is_new_toot && ! empty($id_toot_current) && ! empty($qiita_items_diff)) {
         $url_user = "https://qiitadon.com/@${id_user_qiita}";
         if (isValid_url($url_user)) {
             $visibility = 'unlisted';
-            $msg ="@${id_user_qiita} さんが新規Qiita記事を投稿しました！\n\n『${item_title}』\n${item_url}\n\n[${item_tags}]\n";
+            $msg ="@${id_user_qiita} さんが新規Qiita記事を投稿しました！\n\n『${item_title}』\n${item_url}\n\n[${item_tags}]\n${item_tags_additional}";
         } else {
             $visibility = 'private';
-            $msg ="【新着Qiita記事】\n\n『${item_title}』 @${id_user_qiita}\n${item_url}\n\n[${item_tags}]\n";
+            $msg ="【新着Qiita記事】\n\n『${item_title}』 @${id_user_qiita}\n${item_url}\n\n[${item_tags}]\n${item_tags_additional}";
         }
 
         // 返信トゥートの実行
