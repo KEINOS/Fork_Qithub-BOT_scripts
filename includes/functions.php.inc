@@ -93,6 +93,76 @@ function encode_array_to_api($array_value)
 
     return $json_enc;
 }
+/* ---------------------------------------------------------------------
+    セッター系 Functions
+   --------------------------------------------------------------------- */
+
+/**
+ * set_env_file function.
+ *
+ * 環境設定やAPIのトークンを定数に設定します。引数で指定されたJSONファイ
+ * ルを読み込んで内容を設定します。
+ *
+ * @access public
+ * @param  string $path_file_conf
+ * @return void
+ * @SuppressWarnings(PHPMD)
+ */
+function set_env_file($path_file_conf)
+{
+    if (file_exists($path_file_conf)) {
+        $conf_json  = file_get_contents(trim($path_file_conf));
+        $conf_array = json_decode($conf_json, JSON_OBJECT_AS_ARRAY);
+        
+        if( isset($conf_array['environment']['is_env_dev'])){
+            $is_env_dev = $conf_array['environment']['is_env_dev'];            
+        }
+
+        if('yes' == $is_env_dev){
+            $mastodon = $conf_array['mastodon_api']['access_token_dev'];
+            $qiita    = $conf_array['qiita_api']['access_token_dev'];
+            $github   = $conf_array['github_api']['access_token_dev'];
+            defined('ACCESS_TOKEN_MASTODON') or define('ACCESS_TOKEN_MASTODON', $mastodon);
+            defined('ACCESS_TOKEN_QIITA') or define('ACCESS_TOKEN_QIITA', $qiita);
+            defined('ACCESS_TOKEN_GITHUB') or define('ACCESS_TOKEN_GITHUB', $github);
+            defined('IS_SET_ENV') or define('IS_SET_ENV', true);
+        } else{
+            defined('IS_SET_ENV') or define('IS_SET_ENV', false);
+        }
+
+    } else {
+        $path_file = esc_html($path_file);
+        trigger_error(
+            "confファイルが存在しません。${path_file}",
+            E_USER_WARNING
+        );
+        die();
+    }
+}
+
+/**
+ * set_env_utf8_ja function.
+ *
+ * 実行環境の言語を日本語に設定しタイムゾーンを設定する
+ *
+ * @access public
+ * @param string $timezone (default: 'Asia/Tokyo')
+ * @return void
+ * @SuppressWarnings(PHPMD)
+ */
+function set_env_utf8_ja($timezone = 'Asia/Tokyo')
+{
+    if (! function_exists('mb_language')) {
+        die('This application requires mb_language.');
+    }
+
+    date_default_timezone_set($timezone);
+    setlocale(LC_ALL, 'ja_JP');
+    mb_language('ja');
+    mb_internal_encoding('UTF-8');
+    mb_http_output('UTF-8');
+    ob_start("mb_output_handler");
+}
 
 /* ---------------------------------------------------------------------
     ゲッター系 Functions
@@ -290,7 +360,7 @@ function post_toot($params)
     $result_api = run_script($dir_name_api, $params, $run_background);
     $result     = decode_api_to_array($result_api);
 
-    if (($result['result'] !== 'OK') && IS_MODE_DEBUG) {
+    if (($result['result'] !== 'OK') && is_mode_debug()) {
         echo_on_debug($result_api, 'TOOT FAILED: Posted toot info');
     }
 
@@ -410,17 +480,19 @@ function esc_html($string)
 /**
  * isValid_url function.
  *
- * 有効なURLかを返す。主にQiitadonユーザーが存在するかの確認に利用。
+ * 引数のURLが有効なアドレスかを返す。
+ * 主にQiitadonユーザーが存在するか（ユーザーページが存在するか）の確認
+ * に利用。QiitadonAPI でチェックするにはオーバーヘッドが多く面倒なため。
  *
  * @access public
- * @param mixed $sUrl
- * @return void
+ * @param  mixed $sUrl
+ * @return bool
  */
 function isValid_url($sUrl)
 {
     if (( $sResponce = @file_get_contents($sUrl) ) == false) {
         // HTTPステータスコードを取得する
-        list($version,$status_code,$msg) = explode(' ', $http_response_header[0], 3);
+        list($version, $status_code, $msg) = explode(' ', $http_response_header[0], 3);
         // ステータスコードごとの処理
         switch ($status_code) {
             case 404:
@@ -436,6 +508,29 @@ function isValid_url($sUrl)
         //正常にfile_get_contentsで取得できた場合の処理
         //echo "OK: {$sResponce}";
         return true;
+    }
+}
+
+/**
+ * isValid_hash function.
+ * 
+ * 指定桁数の半角英数字であるかのチェック結果を返す。
+ * 問題なし： IS_VALID_HASH（ture）
+ * 問題あり： IS_INVALID_HASH（false）
+ * 主にアクセストークンの利用前のフォーマットのチェック用で有効なアクセ
+ * ストークン（実際に使えるか否）かは確認しない。
+ * 
+ * @access public
+ * @param  mixed  $value_hash
+ * @param  int    $len_hash (default: 64)
+ * @return bool   IS_INVALID_HASH, IS_VALID_HASH
+ */
+function isValid_hash($value_hash, $len_hash = 64)
+{
+    if( strlen($value_hash) == $len_hash && ctype_xdigit($value_hash) ){
+        return IS_VALID_HASH;
+    }else{
+        return IS_INVALID_HASH;
     }
 }
 
@@ -530,6 +625,21 @@ function with($value)
 $with = "with";
 
 /**
+ * is_mode_debug function.
+ * 
+ * デバッグモードの定数が bool であるため false が指定された場合に備えて
+ * 確実にチェックするための関数
+ *
+ * @access public
+ * @return void
+ * @url http://php.net/manual/ja/function.defined.php#121433
+ */
+function is_mode_debug()
+{
+    return defined('IS_MODE_DEBUG') && IS_MODE_DEBUG;
+}
+
+/**
  * debug_msg function.
  *
  * デバッグモード（IS_MODE_DEBUG = true）時のみ、try, catchできるエラー
@@ -541,7 +651,7 @@ $with = "with";
  */
 function debug_msg($string)
 {
-    if (IS_MODE_DEBUG) {
+    if (is_mode_debug()) {
         $with   = "with";
         $string = esc_html($string);
         $line   = debug_backtrace()[1]['line'];
@@ -566,44 +676,19 @@ function debug_msg($string)
  */
 function echo_on_debug($expression, $title = '')
 {
-    if (IS_MODE_DEBUG) {
-        $title      = esc_html($title);
-        $expression = esc_html($expression);
+    if (is_mode_debug()) {
 
         if (! empty($title)) {
+            $title = esc_html($title);
             $title = "<h1>${title}</h1>";
         }
 
         if (is_string($expression)) {
+            $expression = esc_html($expression);
             echo "<div>${title}<pre>${expression}</pre></div>" . PHP_EOL;
         } else {
-            echo '<div><pre>';
-            print_r($expression);
-            echo "</pre></div>" . PHP_EOL;
+            $expression = esc_html(print_r($expression,true));
+            echo "<div>${title}<pre>${expression}</pre></div>" . PHP_EOL;
         }
     }
-}
-
-/**
- * set_utf8_ja function.
- *
- * 実行環境の言語を日本語に設定しタイムゾーンを設定する
- *
- * @access public
- * @param string $timezone (default: 'Asia/Tokyo')
- * @return void
- * @SuppressWarnings(PHPMD)
- */
-function set_utf8_ja($timezone = 'Asia/Tokyo')
-{
-    if (! function_exists('mb_language')) {
-        die('This application requires mb_language.');
-    }
-
-    date_default_timezone_set($timezone);
-    setlocale(LC_ALL, 'ja_JP');
-    mb_language('ja');
-    mb_internal_encoding('UTF-8');
-    mb_http_output('UTF-8');
-    ob_start("mb_output_handler");
 }

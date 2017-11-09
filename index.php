@@ -22,11 +22,15 @@ include_once('./includes/functions.php.inc');
 /* =====================================================================
     初期設定
    ===================================================================== */
-
 // 言語設定->日本語 地域->東京 にセット
-set_utf8_ja('Asia/Tokyo');
+set_env_utf8_ja('Asia/Tokyo');
 
-// 'system' および 'plugin' が使えるプログラム言語
+// DEV/DPYの環境設定・APIトークンなどを設定
+// 引数に設定ファイル（'qithub.conf.json'）までのパスを指定してください。
+// 設定方法は'./_samples/README.md'を参照してください。
+set_env_file('../../qithub.conf.json');
+
+// 'system' および 'plugin' で使えるサーバー側のプログラム言語（CLI）
 $extension_types = [
         'php'=>'.php',
         'python' =>'.py',
@@ -167,7 +171,7 @@ if (IS_PROC_REGULAR) {
             $has_pre_toot = ($id_pre_toot !== LOAD_DATA_EMPTY);
 
             // トゥートに必要なAPIの取得
-            $keys_api = get_api_keys('../../qithub.conf.json', 'qiitadon');
+            $keys_api = get_api_keys('../../qithub.conf.json', 'qiitadon_dev');
 
             // 前回トゥートを削除
             $msg_toot_deleted = '';

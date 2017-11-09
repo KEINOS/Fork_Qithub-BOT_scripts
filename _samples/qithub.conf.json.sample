@@ -1,18 +1,17 @@
 {
-    "sample1": {
-        "service": "service name to use the api. ex mastodon",
-        "scheme": "https",
-        "domain": "sample1.com",
-        "client_id": "YourClientKey1",
-        "client_secret": "YourClientSecret1",
-        "access_token": "YourAccessToken1"
+    "environment" : {
+        "is_env_dev" : "yes"
     },
-    "sample2": {
-        "service": "service name to use the api. ex qiita",
-        "scheme": "https",
-        "domain": "sample2.com",
-        "client_id": "YourClientKey2",
-        "client_secret": "YourClientSecret2",
-        "access_token": "YourAccessToken2"
+    "mastodon_api" : {
+        "access_token"     : "",
+        "access_token_dev" : ""
+    },
+    "qiita_api" : {
+        "access_token"     : "",
+        "access_token_dev" : ""
+    },
+    "github_api" : {
+        "access_token"     : "",
+        "access_token_dev" : ""
     }
 }

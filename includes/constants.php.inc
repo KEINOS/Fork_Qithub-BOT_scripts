@@ -13,3 +13,12 @@ define('SAVE_DATA_SUCCESS', true);
 define('SAVE_DATA_FAIL', false);
 define('TOOT_SUCCESS', true);
 define('TOOT_FAIL', false);
+define('IS_VALID_HASH', true);
+define('IS_INVALID_HASH', false);
+
+// 以下の定数は'functions.php.inc'の`set_env_file()`で定義しています
+// ACCESS_TOKEN_MASTODON
+// ACCESS_TOKEN_QIITA
+// ACCESS_TOKEN_GITHUB
+// IS_SET_ENV
+
