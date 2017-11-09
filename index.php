@@ -44,18 +44,22 @@ $extension_types = [
     メイン
    =====================================================================
     定例処理（IS_PROC_REGULAR）
-        クエリのパラメーターのないリクエスト
+        クエリのパラメーターのないリクエスト。主にバックグラウンドで処理
+        を行うタイプの処理。
     随時／臨時処理
         クエリにパラメーターがあるリクエスト
+        基本パラメーター
         '&process='     ：'system'や'plugins'を組み合わせた複雑な処理
-        '&plugin_name=' ：'plugins'を直接処理
+        '&plugin_name=' ：'plugins'を直接起動するシンプルな処理
         オプション・パラメーター
         '&mode=debug'   ： デバッグモード（is_mode_debug() = true）で動作
    ===================================================================== */
 
 if (IS_PROC_REGULAR) {
     echo "定例処理を行う予定（in progress）";
-    /** TODO 最新Qiita記事の取得 */
+    /** @todo 最新Qiita記事の取得 */
+    /** @todo BOTのフォロワーの更新 */
+    /** @todo Qiitaのフォロワーの更新 */
 } else {
     switch (strtolower($_GET['process'])) {
         // 'github'
