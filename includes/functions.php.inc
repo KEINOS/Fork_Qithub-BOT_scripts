@@ -141,7 +141,7 @@ function set_env_file($path_file_conf)
 
 /**
  * set_env_as function.
- * 
+ *
  * 実行環境を DEVELOP（開発）か DEPLOY（本稼働）かを設定する。
  *
  * @access public
@@ -149,14 +149,15 @@ function set_env_file($path_file_conf)
  * @return void
  * @SuppressWarnings(PHPMD)
  */
-function set_env_as($arg){
-    switch($arg){
+function set_env_as($arg)
+{
+    switch ($arg) {
         case ( DEV === $arg ):
             defined('IS_ENV_DEV') or define('IS_ENV_DEV', true);
             break;
         case ( DPY === $arg ):
             defined('IS_ENV_DEV') or define('IS_ENV_DEV', false);
-            break;            
+            break;
         default:
             $arg = esc_html($arg);
             trigger_error(
@@ -542,15 +543,13 @@ function isValid_url($sUrl)
  * isValid_hash function.
  *
  * 指定桁数の半角英数字であるかのチェック結果を返す。
- * 問題なし： IS_VALID_HASH（ture）
- * 問題あり： IS_INVALID_HASH（false）
  * 主にアクセストークンの利用前のフォーマットのチェック用で有効なアクセ
  * ストークン（実際に使えるか否）かは確認しない。
  *
  * @access public
  * @param  mixed  $value_hash
  * @param  int    $len_hash (default: 64)
- * @return bool   IS_INVALID_HASH, IS_VALID_HASH
+ * @return bool
  */
 function isValid_hash($value_hash, $len_hash = 64)
 {
