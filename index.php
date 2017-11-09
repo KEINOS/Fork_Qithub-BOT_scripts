@@ -67,28 +67,28 @@ if (IS_PROC_REGULAR) {
         // GitHub からの WebHook の受け取りテスト（内容の保存と確認）
         // クエリの'method'オプションによって保存データの閲覧・削除可能
         case 'github':
-            include_once('./includes/github.php.inc');
+            include_once('./includes/proc/github.php.inc');
             break;
 
         // 'sample'
         // -------------------------------------------------------------
         // BOT のトリガーテスト（プロセス）の動作サンプル
         case 'sample':
-            include_once('./includes/sample.php.inc');
+            include_once('./includes/proc/sample.php.inc');
             break;
 
         // 'say-hello-world'
         // -------------------------------------------------------------
         // 'plugins/say-hello-world' を利用したサンプル
         case 'say-hello-world':
-            include_once('./includes/say-hello-world.php.inc');
+            include_once('./includes/proc/say-hello-world.php.inc');
             break;
 
         // 'get-qiita-new-items'
         // -------------------------------------------------------------
         // Qiita記事の新着N件を表示するサンプル
         case 'get-qiita-new-items':
-            include_once('./includes/get-qiita-new-items.php.inc');
+            include_once('./includes/proc/get-qiita-new-items.php.inc');
             break;
 
         // 'toot-daily'
@@ -96,14 +96,14 @@ if (IS_PROC_REGULAR) {
         // 日付ごとのスレッドでトゥートするサンプル。定例処理用のプロト
         // タイプ。
         case 'toot-daily':
-            include_once('./includes/toot-daily.php.inc');
+            include_once('./includes/proc/toot-daily.php.inc');
             break;
 
         // 'toot-daily-qiita-items'
         // -------------------------------------------------------------
         // 日付ごとのスレッドで新着Qiita記事をトゥートするサンプル
         case 'toot-daily-qiita-items':
-            include_once('./includes/toot-daily-qiita-items.php.inc');
+            include_once('./includes/proc/toot-daily-qiita-items.php.inc');
             break;
 
         // 'get-mastodon-user-info'
@@ -114,7 +114,7 @@ if (IS_PROC_REGULAR) {
         //   '&use_cash=false' ：新規取得（更新）
         //   '&id=USER_ID'     ：指定ユーザーおよびフォロワーの情報を表示
         case 'get-mastodon-user-info':
-            include_once('./includes/get-mastodon-user-info.php.inc');
+            include_once('./includes/proc/get-mastodon-user-info.php.inc');
             break;
 
         // 'roll-dice'
@@ -128,7 +128,7 @@ if (IS_PROC_REGULAR) {
         //   '&dice_code=' ：ダイスコード
         //   '&mode=debug' ：デバッグモード（詳細表示）
         case 'roll-dice':
-            include_once('./includes/roll-dice.php.inc');
+            include_once('./includes/proc/roll-dice.php.inc');
             break;
 
         default:
