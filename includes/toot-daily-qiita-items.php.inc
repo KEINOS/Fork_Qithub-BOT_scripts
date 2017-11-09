@@ -109,9 +109,9 @@ if (! $is_new_toot && ! empty($id_toot_current) && ! empty($qiita_items_diff)) {
     // 新着の差分をループしてトゥート
     foreach ($qiita_items_diff as $item) {
         // Qiita記事の情報代入と初期化
-        $item_title  = $item['title'];
-        $item_url    = $item['url'];
-        $item_tags   = '';
+        $item_title   = $item['title'];
+        $item_url     = $item['url'];
+        $item_tags    = '';
         $is_item_test = false;
 
         foreach ($item['tags'] as $tag) {
@@ -125,7 +125,7 @@ if (! $is_new_toot && ! empty($id_toot_current) && ! empty($qiita_items_diff)) {
             // タグの追加
             $item_tags .= "#${s} ";
 
-            $is_item_test = (is_tag_test($s) && ! $is_tag_test) ?: $is_tag_test;
+            $is_item_test = (is_tag_test($s) && ! $is_item_test) ?: $is_item_test;
         }
 
         // テスト記事ならトゥートをスキップ
