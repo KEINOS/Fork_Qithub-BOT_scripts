@@ -104,7 +104,7 @@ function encode_array_to_api($array_value)
  * ルを読み込んで内容を設定します。
  *
  * @access public
- * @param  string $path_file_conf
+ * @param  string $path_file_conf  Path to environment config file.
  * @return void
  * @SuppressWarnings(PHPMD)
  */
