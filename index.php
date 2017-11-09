@@ -25,7 +25,7 @@ include_once('./includes/functions.php.inc');
 // 言語設定->日本語 地域->東京 にセット
 set_env_utf8_ja('Asia/Tokyo');
 
-// DEV/DPYの環境設定・APIトークンなどを設定
+// 設定ファイルの読み込み。APIトークンなどを設定
 // 引数に設定ファイル（'qithub.conf.json'）までのパスを指定してください。
 // 設定方法は'./_samples/README.md'を参照してください。
 set_env_file('../../qithub.conf.json');
