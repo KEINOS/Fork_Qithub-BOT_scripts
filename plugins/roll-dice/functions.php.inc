@@ -11,22 +11,27 @@
  * @param  string $dice_code
  * @return array
  */
-function roll_dice($dice_code)
+function roll_dice($dice_code, $use_emoji = '')
 {
-    $dice_code = (string) $dice_code;
+    $dice_code     = (string) $dice_code;
+    $is_emoji_mode = (isset($use_emoji) && $use_emoji == 'yes');
 
-    $param = explode('D', strtoupper(trim($dice_code)));
-    $sum   = 0;
-    $roll  = array();
-    $times = intval($param[0]);
-    $max   = intval($param[1]);
+    $param      = explode('D', strtoupper(trim($dice_code)));
+    $sum        = 0;
+    $roll_num   = array();
+    $roll_emoji = array();
+    $times      = intval($param[0]);
+    $max        = intval($param[1]);
 
     for ($i = 0; $i < $times; $i++) {
-        $roll[] = convert_num_to_emoji(rand(1, $max));
-        $sum += end($roll);
+        $ii = rand(1, $max);
+        $roll_num[]   = $ii;
+        $roll_emoji[] = convert_num_to_emoji($ii);
+        $sum += end($roll_num);
     }
+    
+    $roll = ($is_emoji_mode) ? $roll_emoji : $roll_num;
 
-    // $roll = implode(" ", $roll);
     $result = [
         'roll' => $roll,
         'sum'  => $sum,
@@ -95,7 +100,7 @@ function set_utf8_ja($timezone = 'Asia/Tokyo')
  */
 function convert_num_to_emoji($str)
 {
-    $str = (str) $str;
+    $str = (string) $str;
     $map = [
         '0' => ':zero:',
         '1' => ':one:',
