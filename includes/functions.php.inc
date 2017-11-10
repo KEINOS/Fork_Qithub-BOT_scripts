@@ -119,13 +119,16 @@ function set_env_file($path_file_conf)
             $mastodon = $conf_array['mastodon_api']['access_token_dev'];
             $qiita    = $conf_array['qiita_api']['access_token_dev'];
             $github   = $conf_array['github_api']['access_token_dev'];
-            defined('ACCESS_TOKEN_MASTODON') or define('ACCESS_TOKEN_MASTODON', $mastodon);
-            defined('ACCESS_TOKEN_QIITA') or define('ACCESS_TOKEN_QIITA', $qiita);
-            defined('ACCESS_TOKEN_GITHUB') or define('ACCESS_TOKEN_GITHUB', $github);
             defined('IS_SET_ENV') or define('IS_SET_ENV', true);
         } else {
+            $mastodon = $conf_array['mastodon_api']['access_token'];
+            $qiita    = $conf_array['qiita_api']['access_token'];
+            $github   = $conf_array['github_api']['access_token'];
             defined('IS_SET_ENV') or define('IS_SET_ENV', false);
         }
+        defined('ACCESS_TOKEN_MASTODON') or define('ACCESS_TOKEN_MASTODON', $mastodon);
+        defined('ACCESS_TOKEN_QIITA') or define('ACCESS_TOKEN_QIITA', $qiita);
+        defined('ACCESS_TOKEN_GITHUB') or define('ACCESS_TOKEN_GITHUB', $github);
     } else {
         $path_file = esc_html($path_file);
         trigger_error(
