@@ -25,14 +25,14 @@ include_once('./includes/functions.php.inc');
 // 言語設定->日本語 地域->東京 にセット
 set_env_utf8_ja('Asia/Tokyo');
 
+// 本スクリプトの実行環境を設定
+// DEV = DEVELOP（開発）環境, DPY = DEPLOY（本稼働）環境
+set_env_as(DEV);
+
 // 設定ファイルの読み込み。APIトークンなどを設定
 // 引数に設定ファイル（'qithub.conf.json'）までのパスを指定してください。
 // 設定方法は'./_samples/README.md'を参照してください。
 set_env_file('../../qithub.conf.json');
-
-// 本スクリプトの実行環境を設定
-// DEV = DEVELOP（開発）環境, DPY = DEPLOY（本稼働）環境
-set_env_as(DEV);
 
 // 'system' および 'plugin' で使えるサーバー側のプログラム言語（CLI）
 $extension_types = [
