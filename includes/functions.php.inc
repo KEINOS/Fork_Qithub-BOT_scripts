@@ -106,6 +106,7 @@ function encode_array_to_api($array_value)
  * @access public
  * @param  string $path_file_conf  Path to environment config file.
  * @return void
+ * @uses   Use 'set_env_as()' before, in order to make work 'is_env_dev()'.
  * @SuppressWarnings(PHPMD)
  */
 function set_env_file($path_file_conf)
@@ -114,11 +115,7 @@ function set_env_file($path_file_conf)
         $conf_json  = file_get_contents(trim($path_file_conf));
         $conf_array = json_decode($conf_json, JSON_OBJECT_AS_ARRAY);
 
-        if (isset($conf_array['environment']['is_env_dev'])) {
-            $is_env_dev = $conf_array['environment']['is_env_dev'];
-        }
-
-        if ('yes' == $is_env_dev) {
+        if (is_env_dev()) {
             $mastodon = $conf_array['mastodon_api']['access_token_dev'];
             $qiita    = $conf_array['qiita_api']['access_token_dev'];
             $github   = $conf_array['github_api']['access_token_dev'];
