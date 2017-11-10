@@ -4,8 +4,9 @@
    ===================================================================== */
 
 define('IS_MODE_DEBUG', isset($_GET['mode']) and ($_GET['mode'] == 'debug'));
-define('IS_PROC_REGULAR', ! isset($_GET['process'])); // 定例処理
-define('IS_PROC_DEMAND', isset($_GET['process']));    // 随時処理
+define('IS_PROCESS', isset($_GET['process']) and ! empty($_GET['process'])); // 複合処理
+define('IS_PLUGIN', isset($_GET['plugin'])  and ! empty($_GET['plugin']));   // プラグイン単体処理
+define('IS_REGULAR_JOB', ! IS_PROCESS and ! IS_PLUGIN; // バックグラウンド定例処理
 define('DIR_SEP', DIRECTORY_SEPARATOR);
 define('BR_EOL', '<br>' . PHP_EOL);
 define('LOAD_DATA_EMPTY', false);
