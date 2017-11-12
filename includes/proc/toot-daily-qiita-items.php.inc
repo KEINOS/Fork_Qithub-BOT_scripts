@@ -79,11 +79,11 @@ if ($is_new_toot) {
     $msg_additional = (is_env_dev()) ? "[#Qithub:DEV]\n" : '';
     // 本文
     $msg =<<<EOL
-${msg_additional}このトゥートに「非公開」でトゥートしていくから、興味がある人はフォローしてね。
+このトゥートに「非公開」でトゥートしていくから、興味がある人はフォローしてね。
 
-ただ、QiitadonのユーザーのQiita記事だった場合は「未収載」でトゥートするよ。
-また、「★（お気に入り）」や「ブースト」数が一定数超えたトゥートは「公開」で改めてトゥートするね。
-Qiita記事にも「いいね」するから、気にいった記事のトゥートだったら知らせてね！
+ただ、Qiitadon のユーザーの Qiita 記事だった場合は「未収載」でトゥートするよ。
+
+もし、トゥートに 🔃（ブースト）や ⭐️（お気に入り）が一定数ついた場合は「公開」で改めて おすすめトゥート して、Qiita記事の方にも「いいね！」するから、気にいった記事のトゥートだったら 🔃 ⭐️ して知らせてね！${msg_additional}
 EOL;
     // 本稼働の場合は 'unlisted' -> 'public' に変更
     $visibility = 'unlisted';
@@ -146,7 +146,7 @@ if (! $is_new_toot && ! empty($id_toot_current) && ! empty($qiita_items_diff)) {
         $item_tags = trim($item_tags);
 
         // DEV環境の場合にはタグに追加
-        $item_tags_additional = (is_env_dev()) ? "[#Qithub:DEV]\n" : '';
+        $item_tags_additional = (is_env_dev()) ? "[#Qithub:DEV]" : '';
 
         // トゥート内容の作成
         // Qiitadonユーザーの場合はメッセージ内容を変更
@@ -157,12 +157,14 @@ if (! $is_new_toot && ! empty($id_toot_current) && ! empty($qiita_items_diff)) {
         $url_user = "https://qiitadon.com/@${id_user_qiita}";
         if (isValid_url($url_user)) {
             $visibility = 'unlisted';
-            $msg ="@${id_user_qiita} さんが新規Qiita記事を投稿しました！\n\n『${item_title}』\n${item_url}\n\n[${item_tags}]\n${item_tags_additional}";
+            $msg ="【お知らせ】\n@${id_user_qiita} さんが #Qiita記事 を投稿しました！\n\n🆕『${item_title}』\n${item_url}\n\n[${item_tags}]${item_tags_additional}";
         } else {
             $visibility = 'private';
-            $msg ="【新着Qiita記事】\n\n『${item_title}』 @${id_user_qiita}\n${item_url}\n\n[${item_tags}]\n${item_tags_additional}";
+            $msg = "『${item_title}』 @${id_user_qiita}\n${item_url}\n\n[${item_tags}]${item_tags_additional}";
+            $msg_link_boostoot = urlencode("🆕 #Qiita記事\n\n${msg} #Boostoot of @Qithub");
+            $msg = "🆕【新着Qiita記事】\n\n${msg}\nBoostoot! → https://qiitadon.com/share?text=${msg_link_boostoot}";
         }
-
+        
         // 返信トゥートの実行
         $params = [
             'status'         => $msg,
