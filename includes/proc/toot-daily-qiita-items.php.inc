@@ -38,7 +38,7 @@ $list_tags_tooted = ( $list_tags_tooted == LOAD_DATA_EMPTY ) ? array() : $list_t
 //unset($qiita_items_old['9412acb2a7ff37ff9ad0']);
 
 // 比較・差分取得：最新の新着Qiita記事の取得とトゥート済み
-$max_items  = 10;  //ここはハードコーディングしていいのか？
+$max_items  = 5;  //ここはハードコーディングしていいのか？
 $result_api = run_script(
     'system/get-qiita-new-items',
     ['max_items' => $max_items],
@@ -72,9 +72,9 @@ if ($info_toot !== LOAD_DATA_EMPTY) {
 
     if (! empty($id_toot_original) && ! empty($id_toot_current)) {
         $is_new_toot = false;
-    } else if( empty($id_toot_original) && empty($id_toot_current)){
+    } elseif (empty($id_toot_original) && empty($id_toot_current)) {
         $is_new_toot = true;
-    } else if(! empty($id_toot_original) && empty($id_toot_current)){
+    } elseif (! empty($id_toot_original) && empty($id_toot_current)) {
         $id_toot_current = $id_toot_original;
         $is_new_toot = false;
     }
@@ -164,30 +164,36 @@ if (! $is_new_toot && ! empty($id_toot_current) && ! empty($qiita_items_diff)) {
         $item_url     = $item['url'];
         $item_tags    = '';
         $is_item_test = false;
+        $list_tags_tooted_tmp = $list_tags_tooted;
 
         // 抽出：Qiita記事のタグ（トゥートのハッシュタグ用）
         foreach ($item['tags'] as $tag) {
             $tag_name = (string) $tag['name'];
 
-            // 追加：トゥート内に含めるタグ。カンマ付きのタグも処理。
+            // 一時追加：トゥート内に含めるタグ。カンマ付きのタグも処理。
             if (strpos($tag_name, ',')) {
                 $tmp_tags = explode(',', $tag_name);
                 foreach ($tmp_tags as $tmp_tag) {
                     $tmp_tag = sanitize_tag_for_qiitadon($tmp_tag);
                     $item_tags .= "#${tmp_tag} ";
-                    $list_tags_tooted[] = strtolower($tmp_tag);
+                    $list_tags_tooted_tmp[] = strtolower($tmp_tag);
+                    // 確認：Qiita記事がテスト投稿（タグに「テスト」を含む）か確認
+                    $is_item_test = (is_tag_test($tmp_tag) && ! $is_item_test) ?: $is_item_test;
                 }
             } else {
                 $tmp_tag = sanitize_tag_for_qiitadon($tag_name);
                 $item_tags .= "#${tmp_tag} ";
-                $list_tags_tooted[] = strtolower($tmp_tag);
+                // 確認：Qiita記事がテスト投稿（タグに「テスト」を含む）か確認
+                $is_item_test = (is_tag_test($tmp_tag) && ! $is_item_test) ?: $is_item_test;
+
+                $list_tags_tooted_tmp[] = strtolower($tmp_tag);
             }
 
             // 整理：保存用のトゥート済みタグ一覧を一意（ユニーク）に
-            $list_tags_tooted   = array_values(array_unique($list_tags_tooted));
-
-            // 確認：Qiita記事がテスト投稿（タグに「テスト」を含む）か確認
-            $is_item_test = (is_tag_test($s) && ! $is_item_test) ?: $is_item_test;
+            $list_tags_tooted_tmp = array_values(array_unique($list_tags_tooted_tmp));
+        }
+        if (! $is_item_test) {
+            $list_tags_tooted = $list_tags_tooted_tmp;
         }
 
         // スキップ：テスト記事ならトゥートをスキップ
