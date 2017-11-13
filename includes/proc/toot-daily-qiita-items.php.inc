@@ -130,10 +130,12 @@ EOL;
             $id_toot_original  = $result_toot_value['id'];
             $id_toot_current   = $id_toot_original;
         } else {
-            echo_on_debug($result_toot, '宣言トゥートに失敗しました（$result_tootの内容）');
+            $debug_title = debug_msg('宣言（親トゥート）のトゥートID取得に失敗しました', true);
+            echo_on_debug($result_toot, $debug_title);
         }
     } else {
-        echo_on_debug("宣言トゥートのトゥートに失敗しました。\n", 'Toot fail');
+        $debug_title = debug_msg('宣言（親トゥート）のトゥートに失敗しました', true);
+        echo_on_debug($result_toot, $debug_title);
     }
     /** @todo トゥート失敗時の処理 issue #46 おそらくpost_tootの戻り値がおかしい */
 }
@@ -222,7 +224,12 @@ if (! $is_new_toot && ! empty($id_toot_current) && ! empty($qiita_items_diff)) {
 
         // 取得：無事トゥート済みのトゥートID
         if ($result_toot == TOOT_SUCCESS) {
-            $id_toot_current = json_decode($result_toot['value'], JSON_OBJECT_AS_ARRAY)['id'];
+            $result_toot_value = json_decode($result_toot['value'], JSON_OBJECT_AS_ARRAY);
+            if (isset($result_toot_value['id'])) {
+                $id_toot_current   = $result_toot_value['id'];
+            } else {
+                echo_on_debug($result_toot, '子トゥートに失敗しました（$result_tootの内容）');
+            }
         } else {
             echo_on_debug("子トゥートのトゥートに失敗しました。\n", 'Toot fail');
         }

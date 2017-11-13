@@ -708,19 +708,26 @@ function is_env_dev()
  * （E_USER_WARNING）出力関数。エラー発生元の取得も行う。
  *
  * @access public
- * @param mixed $string
+ * @param  mixed $string
+ * @param  bool  $return この引数が true の場合には情報を返します。
  * @return void
  */
-function debug_msg($string)
+function debug_msg($string, $return = false)
 {
     if (is_mode_debug()) {
         $with   = "with";
         $string = esc_html($string);
         $line   = debug_backtrace()[1]['line'];
-        trigger_error(
-            "${string}【呼び出し元】 ${line}行{$with(BR_EOL)}",
-            E_USER_WARNING
-        );
+        $string = "${string}【呼び出し元】 ${line}行{$with(BR_EOL)}";
+
+        if ($return) {
+            return $string;
+        } else {
+            trigger_error(
+                $string,
+                E_USER_WARNING
+            );
+        }
     }
 }
 
