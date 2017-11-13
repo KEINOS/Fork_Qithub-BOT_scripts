@@ -704,18 +704,21 @@ function is_env_dev()
 /**
  * debug_msg function.
  *
+ * デバッグモード時にエラー発生行付きで任意の表示する関数。
+ *
  * デバッグモード（IS_MODE_DEBUG = true）時のみ、try, catchできるエラー
  * （E_USER_WARNING）出力関数。エラー発生元の取得も行う。
  *
  * @access public
- * @param  mixed $string
- * @param  bool  $return この引数が true の場合には情報を返します。
+ * @param  string $string
+ * @param  bool   $return この引数が true の場合には情報を返します。
  * @return void
  */
 function debug_msg($string, $return = false)
 {
     if (is_mode_debug()) {
         $with   = "with";
+        $string = (string) $string;
         $string = esc_html($string);
         $line   = debug_backtrace()[1]['line'];
         $string = "${string}【呼び出し元】 ${line}行{$with(BR_EOL)}";
@@ -734,8 +737,9 @@ function debug_msg($string, $return = false)
 /**
  * echo_on_debug function.
  *
- * デバッグモード（IS_MODE_DEBUG = true）時のみ echo/print_r を返す関数。
- * 主にテスト動作で引数をチェックするなどに利用する。
+ * echo/print_r を見やすく出力するデバッグ用関数。
+ * デバッグモード（IS_MODE_DEBUG = true）時のみ動作。主にテスト動作で
+ * 変数の内容をチェックする時などに利用する。
  *
  * @access public
  * @param  mixed  $expression
