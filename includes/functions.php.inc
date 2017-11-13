@@ -593,6 +593,28 @@ function sanitize_id_user_qiita($string)
     return $string;
 };
 
+/**
+ * sanitize_tagname_qiitadon function.
+ *
+ * Qiitaタグを Mastodon のハッシュタグ用に正規化変換
+ *
+ * @access public
+ * @param mixed $string
+ * @return void
+ */
+function sanitize_tag_for_qiitadon($string)
+{
+    $string = (string) $string;
+    $string = mb_convert_kana($string, 'aKV');
+    $string = trim($string);
+    $string = str_replace('++', 'プラプラ', $string);
+    $string = str_replace('+', 'プラス', $string);
+    $string = str_replace('#', 'Sharp', $string);
+    $string = str_replace('.', '', $string);
+    $string = str_replace('-', '_', $string);
+
+    return $string;
+}
 
 /**
  * is_tag_test function.

@@ -156,16 +156,21 @@ if (! $is_new_toot && ! empty($id_toot_current) && ! empty($qiita_items_diff)) {
         $item_tags    = '';
         $is_item_test = false;
 
+        // 抽出：Qiita記事のタグ（トゥートのハッシュタグ用）
         foreach ($item['tags'] as $tag) {
-            $s = (string) $tag['name'];
-            $s = str_replace('++', 'プラプラ', $s);
-            $s = str_replace('#', 'Sharp', $s);
-            $s = str_replace('.', '', $s);
-            $s = str_replace('-', '_', $s);
-            $s = trim($s);
+            $tag_name = (string) $tag['name'];
 
-            // 追加：トゥート内に含めるタグ
-            $item_tags .= "#${s} ";
+            // 追加：トゥート内に含めるタグ。カンマ付きのタグも処理。
+            if (strpos($tag_name, ',')) {
+                $tmp_tags = explode(',', $tag_name);
+                foreach ($tmp_tags as $tmp_tag) {
+                    $tmp_tag = sanitize_tag_for_qiitadon($tmp_tag);
+                    $item_tags .= "#${tmp_tag} ";
+                }
+            } else {
+                $tmp_tag = sanitize_tag_for_qiitadon($tag_name);
+                $item_tags .= "#${tmp_tag} ";
+            }
 
             // 追加：トゥート済みタグ一覧（保存用）
             $list_tags_tooted[] = strtolower($s);
