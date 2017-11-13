@@ -25,6 +25,11 @@ $id_data_qiita   = 'qiita_id_tooted';
 $qiita_items_old = load_data($id_data_qiita);
 $qiita_items_old = ( $qiita_items_old == LOAD_DATA_EMPTY ) ? array() : $qiita_items_old;
 
+// 読み込み：トゥート済みタグ一覧
+$id_data_tags     = 'tag_list_of_daily_toot';
+$list_tags_tooted = load_data($id_data_tags);
+$list_tags_tooted = ( $list_tags_tooted == LOAD_DATA_EMPTY ) ? array() : $list_tags_tooted;
+
 // 削除：動作確認用の要素の削除
 // 　　　アンコメントすると指定したトゥートIDがトゥート済みから削除され、
 // 　　　新着一覧にまだ存在する場合は、再トゥートされる。
@@ -72,6 +77,14 @@ if ($info_toot !== LOAD_DATA_EMPTY) {
 //    初トゥート：public
 //
 if ($is_new_toot) {
+    
+    /** @todo $list_tags_tooted の前回までのタグ一覧を（終了宣言）トゥート
+        してから以下を続行
+    */       
+    
+    // タグ一覧を初期化
+    //$list_tags_tooted = array();
+    $msg_tags = print_r($list_tags_tooted,true);
     // トゥート時間
     $date_today = date('Y/m/d H時');
     // CW文
@@ -85,6 +98,7 @@ if ($is_new_toot) {
 ただ、Qiitadon のユーザーの Qiita 記事だった場合は「未収載」でトゥートするよ。
 
 もし、トゥートに 🔃（ブースト）や ⭐️（お気に入り）が一定数ついた場合は「公開」で改めて おすすめトゥート して、Qiita記事の方にも「いいね！」するから、気にいった記事のトゥートだったら 🔃 ⭐️ して知らせてね！${msg_additional}
+${msg_tags}
 EOL;
     // 本稼働の場合は 'unlisted' -> 'public' に変更
     $visibility = 'unlisted';
@@ -133,8 +147,12 @@ if (! $is_new_toot && ! empty($id_toot_current) && ! empty($qiita_items_diff)) {
             $s = str_replace('-', '_', $s);
             $s = trim($s);
 
-            // 追加：トゥート内に含めるタグ一覧
+            // 追加：トゥート内に含めるタグ
             $item_tags .= "#${s} ";
+
+            // 追加：トゥート済みタグ一覧（保存用）
+            $list_tags_tooted[] = strtolower($s);
+            $list_tags_tooted   = array_values(array_unique($list_tags_tooted));
 
             // 確認：Qiita記事がテスト投稿（タグに「テスト」を含む）か確認
             $is_item_test = (is_tag_test($s) && ! $is_item_test) ?: $is_item_test;
@@ -156,14 +174,15 @@ if (! $is_new_toot && ! empty($id_toot_current) && ! empty($qiita_items_diff)) {
         //
         /** @todo BOTフォロワー、Qiitadonユーザーの判断。BOTフォロワーなら未収載 */
         $id_user_qiita = sanitize_id_user_qiita($item['user']['id']);
+        $atmark = (is_env_dev()) ? '＠' : '@'; //DEV環境の時はメンションさせない
         $url_user = "https://qiitadon.com/@${id_user_qiita}";
         if (isValid_url($url_user)) {
             $visibility = 'unlisted';
-            $msg ="【お知らせ】\n@${id_user_qiita} さんが #Qiita記事 を投稿しました！\n\n🆕『${item_title}』\n${item_url}\n\n[${item_tags}]${item_tags_additional}";
+            $msg ="【お知らせ】\n${atmark}${id_user_qiita} さんが #Qiita記事 を投稿しました！\n\n🆕『${item_title}』\n${item_url}\n\n[${item_tags}]${item_tags_additional}";
         } else {
             $visibility = 'private';
-            $msg = "『${item_title}』 @${id_user_qiita}\n${item_url}\n\n[${item_tags}]${item_tags_additional}";
-            // Boostoot
+            $msg = "『${item_title}』 ${atmark}${id_user_qiita}\n${item_url}\n\n[${item_tags}]${item_tags_additional}";
+            $msg_link_boostoot = urlencode("🆕 #Qiita記事\n\n${msg} #Boostoot of @Qithub");   
             $msg = "🆕【新着Qiita記事】\n\n${msg}\nBoostoot! → https://qiitadon.com/share?text=${msg_link_boostoot}";
         }
         
@@ -189,22 +208,29 @@ if ($result_toot == TOOT_SUCCESS) {
     // 取得：子トゥートIDの取得
     //$id_toot_current = json_decode($result_toot['value'], JSON_OBJECT_AS_ARRAY)['id'];
 
-    // 設定：保存するデータ（時間、親トゥートID、最終トゥートID）
+    // 保存：$info_toot_to_save（時間、親トゥートID、最終トゥートID）
     $info_toot_to_save = [
         'id_date'          => $id_date,
         'id_toot_original' => $id_toot_original,
         'id_toot_current'  => $id_toot_current,
     ];
-    // 保存：$info_toot_to_save
     $result_save = save_data($id_data_toot, $info_toot_to_save);
     if ($result_save == SAVE_DATA_SUCCESS) {
         echo 'Toot info saved.' . BR_EOL;
     }
+
     // 保存：トゥート済みQiita記事一覧
     $result_save = save_data($id_data_qiita, $qiita_items_new);
     if ($result_save == SAVE_DATA_SUCCESS) {
         echo 'Qiita info saved.' . BR_EOL;
     }
+
+    // 保存：トゥート済みタグ一覧
+    $result_save = save_data($id_data_tags, $list_tags_tooted);
+    if ($result_save == SAVE_DATA_SUCCESS) {
+        echo 'Tag list saved.' . BR_EOL;
+    }
+
 } else {
     echo 'Toot fail.' . BR_EOL;
     if (empty($qiita_items_diff)) {
