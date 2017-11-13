@@ -50,19 +50,27 @@ if (is_mode_debug()) {
     echo_on_debug($qiita_items_new, 'New item');
     echo_on_debug($qiita_items_old, 'Old item');
     echo_on_debug($qiita_items_diff, 'Diff item');
+    echo_on_debug($info_toot, 'TOOT INFO');
 }
 
 // 取得：今日の日付をトゥート日のIDとして取得
 $id_date = (int) date('YmdH');
 
 // フラグ設定：宣言トゥートが発動済みか
+
+
 // 発動済みの場合：親トゥートと最新（１つ前の）トゥートをセット
 if ($info_toot !== LOAD_DATA_EMPTY) {
     // 宣言トゥート済みフラグを立てる（保存日の比較）
     $is_new_toot = ($info_toot['id_date'] !== $id_date);
+
     // トゥートIDの取得
-    $id_toot_current  = $info_toot['id_toot_current'];
     $id_toot_original = $info_toot['id_toot_original'];
+    $id_toot_current  = $info_toot['id_toot_current'];
+
+    if (empty($id_toot_original)&&empty($id_toot_current)) {
+        $is_new_toot = true;
+    }
 } else {
     // 宣言トゥートフラグ
     $is_new_toot = true;
@@ -77,14 +85,14 @@ if ($info_toot !== LOAD_DATA_EMPTY) {
 //    初トゥート：public
 //
 if ($is_new_toot) {
-    
+
     /** @todo $list_tags_tooted の前回までのタグ一覧を（終了宣言）トゥート
         してから以下を続行
-    */       
-    
+    */
+
     // タグ一覧を初期化
     //$list_tags_tooted = array();
-    $msg_tags = print_r($list_tags_tooted,true);
+    $msg_tags = print_r($list_tags_tooted, true);
     // トゥート時間
     $date_today = date('Y/m/d H時');
     // CW文
@@ -100,6 +108,8 @@ if ($is_new_toot) {
 もし、トゥートに 🔃（ブースト）や ⭐️（お気に入り）が一定数ついた場合は「公開」で改めて おすすめトゥート して、Qiita記事の方にも「いいね！」するから、気にいった記事のトゥートだったら 🔃 ⭐️ して知らせてね！${msg_additional}
 ${msg_tags}
 EOL;
+    // 初期化：トゥート済みタグをリセット
+    $list_tags_tooted = array();
     // 本稼働の場合は 'unlisted' -> 'public' に変更
     $visibility = 'unlisted';
     // トゥートのパラメータ設定（新規投稿）
@@ -115,8 +125,15 @@ EOL;
     // 取得：無事トゥート済みのトゥートID（親トゥート:original, 直近トゥート:current）
     if ($result_toot == TOOT_SUCCESS) {
         $is_new_toot = false;
-        $id_toot_original = json_decode($result_toot['value'], JSON_OBJECT_AS_ARRAY)['id'];
-        $id_toot_current  = $id_toot_original;
+        $result_toot_value = json_decode($result_toot['value'], JSON_OBJECT_AS_ARRAY);
+        if (isset($result_toot_value['id'])) {
+            $id_toot_original  = $result_toot_value['id'];
+            $id_toot_current   = $id_toot_original;
+        } else {
+            echo_on_debug($result_toot, '宣言トゥートに失敗しました（$result_tootの内容）');
+        }
+    } else {
+        echo_on_debug("宣言トゥートのトゥートに失敗しました。\n", 'Toot fail');
     }
     /** @todo トゥート失敗時の処理 issue #46 おそらくpost_tootの戻り値がおかしい */
 }
@@ -182,10 +199,12 @@ if (! $is_new_toot && ! empty($id_toot_current) && ! empty($qiita_items_diff)) {
         } else {
             $visibility = 'private';
             $msg = "『${item_title}』 ${atmark}${id_user_qiita}\n${item_url}\n\n[${item_tags}]${item_tags_additional}";
-            $msg_link_boostoot = urlencode("🆕 #Qiita記事\n\n${msg} #Boostoot of @Qithub");   
-            $msg = "🆕【新着Qiita記事】\n\n${msg}\nBoostoot! → https://qiitadon.com/share?text=${msg_link_boostoot}";
+            $msg_link_boostoot = urlencode("🆕 #Qiita記事\n\n${msg} #Boostoot of @Qithub");
+            // テスト：タグをストアしているかのテスト
+            $msg_tags = print_r($list_tags_tooted, true);
+            $msg = "🆕【新着Qiita記事】\n\n${msg}\nBoostoot! → https://qiitadon.com/share?text=${msg_link_boostoot} \n${msg_tags}";
         }
-        
+
         // トゥート：返信トゥート（子トゥート）の実行
         $params = [
             'status'         => $msg,
@@ -199,6 +218,8 @@ if (! $is_new_toot && ! empty($id_toot_current) && ! empty($qiita_items_diff)) {
         // 取得：無事トゥート済みのトゥートID
         if ($result_toot == TOOT_SUCCESS) {
             $id_toot_current = json_decode($result_toot['value'], JSON_OBJECT_AS_ARRAY)['id'];
+        } else {
+            echo_on_debug("子トゥートのトゥートに失敗しました。\n", 'Toot fail');
         }
     }
 }
@@ -230,10 +251,18 @@ if ($result_toot == TOOT_SUCCESS) {
     if ($result_save == SAVE_DATA_SUCCESS) {
         echo 'Tag list saved.' . BR_EOL;
     }
-
 } else {
     echo 'Toot fail.' . BR_EOL;
     if (empty($qiita_items_diff)) {
         echo 'There is no diffs on tooted items. Did not toot.' . BR_EOL;
+    } else {
+        echo 'トゥートに失敗したトゥートがあります。' . BR_EOL;
+    }
+
+    if (is_env_dev()) {
+        echo '<hr>';
+        echo ($is_new_toot) ? 'IS NEW TOOT' . BR_EOL : 'IS THREAD' . BR_EOL;
+        echo (empty($id_toot_current)) ? 'CURRENT TOOT ID EMPTY' . BR_EOL : "CUR ID:${id_toot_current}" . BR_EOL;
+        echo (empty($qiita_items_diff)) ? 'NO DIFFs' . BR_EOL : 'THERE ARE DIFFs' . BR_EOL;
     }
 }
