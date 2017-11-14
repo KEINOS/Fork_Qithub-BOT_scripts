@@ -12,6 +12,7 @@ $result_toot      = TOOT_FAIL;
 $is_new_toot      = false;
 $id_toot_current  = ''; // １つ前のトゥートID
 $id_toot_original = ''; // 親のトゥートID
+$max_items        = 10;  // 取得するQiita記事の数
 
 // 取得：トゥートに必要なAPI
 $keys_api     = get_api_keys('../../qithub.conf.json', 'qiitadon');
@@ -36,7 +37,6 @@ $list_tags_tooted = ( $list_tags_tooted == LOAD_DATA_EMPTY ) ? array() : $list_t
 //unset($qiita_items_old['9412acb2a7ff37ff9ad0']);
 
 // 比較・差分取得：最新の新着Qiita記事の取得とトゥート済み
-$max_items  = 5;  //ここはハードコーディングしていいのか？
 $result_api = run_script(
     'system/get-qiita-new-items',
     ['max_items' => $max_items],
@@ -173,7 +173,7 @@ EOD;
 :qiita: 新着記事の紹介を開始します
 ➖➖➖➖➖➖➖➖➖➖
 
-Qiitadon のユーザーの新規Qiita記事を、このトゥートに「未収載」で返信トゥートするよ。
+Qiitadon ユーザーの新規 Qiita 記事を、このトゥートに「未収載」で返信トゥートするよ。
 
 残りの記事は「非公開」で返信トゥートしているので興味がある人はフォローしてね。
 
