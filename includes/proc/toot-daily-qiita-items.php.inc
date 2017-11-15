@@ -140,7 +140,6 @@ EOD;
     $date_hour24 = date('H');
     $date_hour12 = (integer) date('h');
 
-
     // CW文
     $icon_hour = strtr($date_hour12, [
         12 => '🕛',
