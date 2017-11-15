@@ -593,6 +593,28 @@ function sanitize_id_user_qiita($string)
     return $string;
 };
 
+/**
+ * sanitize_tagname_qiitadon function.
+ *
+ * Qiitaタグを Mastodon のハッシュタグ用に正規化変換
+ *
+ * @access public
+ * @param mixed $string
+ * @return void
+ */
+function sanitize_tag_for_qiitadon($string)
+{
+    $string = (string) $string;
+    $string = mb_convert_kana($string, 'aKV');
+    $string = trim($string);
+    $string = str_replace('++', 'プラプラ', $string);
+    $string = str_replace('+', 'プラス', $string);
+    $string = str_replace('#', 'Sharp', $string);
+    $string = str_replace('.', '', $string);
+    $string = str_replace('-', '_', $string);
+
+    return $string;
+}
 
 /**
  * is_tag_test function.
@@ -682,31 +704,42 @@ function is_env_dev()
 /**
  * debug_msg function.
  *
+ * デバッグモード時にエラー発生行付きで任意の表示する関数。
+ *
  * デバッグモード（IS_MODE_DEBUG = true）時のみ、try, catchできるエラー
  * （E_USER_WARNING）出力関数。エラー発生元の取得も行う。
  *
  * @access public
- * @param mixed $string
+ * @param  string $string
+ * @param  bool   $return この引数が true の場合には情報を返します。
  * @return void
  */
-function debug_msg($string)
+function debug_msg($string, $return = false)
 {
     if (is_mode_debug()) {
         $with   = "with";
+        $string = (string) $string;
         $string = esc_html($string);
         $line   = debug_backtrace()[1]['line'];
-        trigger_error(
-            "${string}【呼び出し元】 ${line}行{$with(BR_EOL)}",
-            E_USER_WARNING
-        );
+        $string = "${string}【呼び出し元】 ${line}行{$with(BR_EOL)}";
+
+        if ($return) {
+            return $string;
+        } else {
+            trigger_error(
+                $string,
+                E_USER_WARNING
+            );
+        }
     }
 }
 
 /**
  * echo_on_debug function.
  *
- * デバッグモード（IS_MODE_DEBUG = true）時のみ echo/print_r を返す関数。
- * 主にテスト動作で引数をチェックするなどに利用する。
+ * echo/print_r を見やすく出力するデバッグ用関数。
+ * デバッグモード（IS_MODE_DEBUG = true）時のみ動作。主にテスト動作で
+ * 変数の内容をチェックする時などに利用する。
  *
  * @access public
  * @param  mixed  $expression
