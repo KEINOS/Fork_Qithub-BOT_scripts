@@ -95,7 +95,7 @@ if ($is_new_toot) {
         $id_thread_last = $info_toot['id_thread'];
         $thread_date  = date("Y/m/d", strtotime($id_thread_last));
         $thread_hour  = date("H 時", strtotime($id_thread_last));
-        $spoiler_text = "ℹ️【 ${thread_hour}の :qiita: のタグ一覧】(${thread_date})";
+        $spoiler_text = "📋【 ${thread_hour}の :qiita: のタグ一覧】(${thread_date})";
         //
         // とりまとめトゥートのメッセージ
         //--------------------------------------------------------------
@@ -140,8 +140,9 @@ EOD;
     $date_hour24 = date('H');
     $date_hour12 = (integer) date('h');
 
+
     // CW文
-    $icon_hour = strtr((integer) $date_hour12[
+    $icon_hour = strtr($date_hour12, [
         12 => '🕛',
         11 => '🕚',
         10 => '🕙',
@@ -157,7 +158,7 @@ EOD;
         1  => '🕐',
         0  => '🕛',
     ]);
-    $spoiler_text = "${icon_hour} ${date_hour24} 時をお知らせします🗨:qiitan: (${date_today})";
+    $spoiler_text = "${icon_hour} ${date_hour24} 時をお知らせします:qiitan: (${date_today})";
 
     // DEV環境の場合の付加メッセージ
     $msg_additional = (is_env_dev()) ? "[#Qithub:DEV]\n" : '';
@@ -194,20 +195,23 @@ EOD;
 
     // 取得：無事トゥート済みのトゥートID（親トゥート:original, 直近トゥート:current）
     if ($result_toot == TOOT_SUCCESS) {
-        $is_new_toot = false;
         $result_toot_value = json_decode($result_toot['value'], JSON_OBJECT_AS_ARRAY);
         if (isset($result_toot_value['id'])) {
             $id_toot_original = $result_toot_value['id'];
             $id_toot_current  = $id_toot_original;
+            $is_new_toot = false;
         } else {
             $debug_title = debug_msg('宣言（親トゥート）のトゥートID取得に失敗しました', true);
             echo_on_debug($result_toot, $debug_title);
+            $is_new_toot = true; //スレッドを開始しない
+            $id_thread   = $id_thread_last; //スレッドIDのロールバック
         }
     } else {
         $debug_title = debug_msg('宣言（親トゥート）のトゥートに失敗しました', true);
         echo_on_debug($result_toot, $debug_title);
+        $is_new_toot = true; //スレッドを開始しない
+        $id_thread   = $id_thread_last; //スレッドIDのロールバック
     }
-    /** @todo トゥート失敗時の処理 issue #46 おそらくpost_tootの戻り値がおかしい */
 }
 
 // ---------------------------------------------------------------------
@@ -285,11 +289,11 @@ if (! $is_new_toot && ! empty($id_toot_current) && ! empty($qiita_items_diff)) {
             // QiitadonユーザーのQiita記事の場合のメッセージ
             // ---------------------------------------------------------
             $msg =<<<EOD
-📰【お知らせ】 :qiitan:
+📰【お知らせ】:qiitan:
+
 ${atmark}${id_user_qiita} さんが #Qiita記事 を投稿しました！
 
-
-🆕『${item_title}』:qiita:
+🆕:qiita:『${item_title}』
 ${item_url}
 
 [ ${item_tags} ]${item_tags_additional}
