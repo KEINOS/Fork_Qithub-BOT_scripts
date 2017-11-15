@@ -141,7 +141,7 @@ EOD;
     $date_hour12 = (integer) date('h');
 
     // CW文
-    $icon_hour = strtr((integer) $date_hour12[
+    $icon_hour = strtr((integer) $date_hour12, [
         12 => '🕛',
         11 => '🕚',
         10 => '🕙',
