@@ -91,18 +91,21 @@ if ($is_new_toot) {
         foreach ($list_tags_tooted as $tag) {
             $msg_tags .= "#${tag}\n";
         }
+        $msg_tags = trim($msg_tags);
         // CW文
         $id_thread_last = $info_toot['id_thread'];
         $thread_date  = date("Y/m/d", strtotime($id_thread_last));
         $thread_hour  = date("H 時", strtotime($id_thread_last));
-        $spoiler_text = "ℹ️【 ${thread_hour}の :qiita: のタグ一覧】(${thread_date})";
+        $spoiler_text = "📋【 ${thread_hour}の :qiita: のタグ一覧】(${thread_date})";
         //
         // とりまとめトゥートのメッセージ
         //--------------------------------------------------------------
         $msg =<<<EOD
-以下のタグが ${thread_date} ${thread_hour}の間に :qiita: に投稿されました。
-
+以下のタグの記事がこの１時間に :qiita: に投稿されました。
+➖➖➖➖➖➖➖➖➖➖
 ${msg_tags}
+➖➖➖➖➖➖➖➖➖➖
+これらのタグを含む記事へのリンクは、このトゥートのスレッドに「非公開」もしくは「未収載」でトゥートされています。
 EOD;
         // 返信先トゥートID
         $id_toot_replyto = $id_toot_current ?: $id_toot_original;
@@ -141,7 +144,7 @@ EOD;
     $date_hour12 = (integer) date('h');
 
     // CW文
-    $icon_hour = strtr((integer) $date_hour12, [
+    $icon_hour = strtr($date_hour12, [
         12 => '🕛',
         11 => '🕚',
         10 => '🕙',
@@ -157,7 +160,7 @@ EOD;
         1  => '🕐',
         0  => '🕛',
     ]);
-    $spoiler_text = "${icon_hour} ${date_hour24} 時をお知らせします🗨:qiitan: (${date_today})";
+    $spoiler_text = "${icon_hour} ${date_hour24} 時をお知らせします :qiitan: (${date_today})";
 
     // DEV環境の場合の付加メッセージ
     $msg_additional = (is_env_dev()) ? "[#Qithub:DEV]\n" : '';
@@ -189,25 +192,29 @@ EOD;
         'visibility'   => $visibility,
     ];
 
-    // 宣言トゥートの実行
+    // 実行：宣言トゥートをポスト
     $result_toot = post_toot($params);
 
     // 取得：無事トゥート済みのトゥートID（親トゥート:original, 直近トゥート:current）
+    //       トゥートに失敗した場合はスレッドは継続
     if ($result_toot == TOOT_SUCCESS) {
-        $is_new_toot = false;
         $result_toot_value = json_decode($result_toot['value'], JSON_OBJECT_AS_ARRAY);
         if (isset($result_toot_value['id'])) {
             $id_toot_original = $result_toot_value['id'];
             $id_toot_current  = $id_toot_original;
+            $is_new_toot = false;
         } else {
             $debug_title = debug_msg('宣言（親トゥート）のトゥートID取得に失敗しました', true);
             echo_on_debug($result_toot, $debug_title);
+            $is_new_toot = true; //スレッドを開始しない
+            $id_thread   = $id_thread_last; //スレッドIDのロールバック
         }
     } else {
         $debug_title = debug_msg('宣言（親トゥート）のトゥートに失敗しました', true);
         echo_on_debug($result_toot, $debug_title);
+        $is_new_toot = true; //スレッドを開始しない
+        $id_thread   = $id_thread_last; //スレッドIDのロールバック
     }
-    /** @todo トゥート失敗時の処理 issue #46 おそらくpost_tootの戻り値がおかしい */
 }
 
 // ---------------------------------------------------------------------
@@ -228,6 +235,9 @@ if (! $is_new_toot && ! empty($id_toot_current) && ! empty($qiita_items_diff)) {
         $item_url     = $item['url'];
         $item_tags    = '';
         $is_item_test = false;
+
+        // Qiita記事がテスト記事だった場合のタグの一時的な追加用
+        // $list_tags_tooted は、とりまとめトゥートのタグ一覧
         $list_tags_tooted_tmp = $list_tags_tooted;
 
         // 抽出：Qiita記事のタグ（トゥートのハッシュタグ用）
@@ -238,7 +248,7 @@ if (! $is_new_toot && ! empty($id_toot_current) && ! empty($qiita_items_diff)) {
             if (strpos($tag_name, ',')) {
                 $tmp_tags = explode(',', $tag_name);
                 foreach ($tmp_tags as $tmp_tag) {
-                    $tmp_tag = sanitize_tag_for_qiitadon($tmp_tag);
+                    $tmp_tag    = sanitize_tag_for_qiitadon($tmp_tag);
                     $item_tags .= "#${tmp_tag} ";
                     $list_tags_tooted_tmp[] = strtolower($tmp_tag);
                     // 確認：Qiita記事がテスト投稿（タグに「テスト」を含む）か確認
@@ -256,16 +266,17 @@ if (! $is_new_toot && ! empty($id_toot_current) && ! empty($qiita_items_diff)) {
             // 整理：保存用のトゥート済みタグ一覧を一意（ユニーク）に
             $list_tags_tooted_tmp = array_values(array_unique($list_tags_tooted_tmp));
         }
+
+        // Qiita記事がテスト記事でない場合は、tempタグ一覧を適用
         if (! $is_item_test) {
             $list_tags_tooted = $list_tags_tooted_tmp;
         }
+        $item_tags = trim($item_tags);
 
         // スキップ：テスト記事ならトゥートをスキップ
         if ($is_item_test) {
             continue;
         }
-
-        $item_tags = trim($item_tags);
 
         // 追加：DEV環境の場合の追加タグ
         $item_tags_additional = (is_env_dev()) ? "[#Qithub:DEV]" : '';
@@ -285,11 +296,11 @@ if (! $is_new_toot && ! empty($id_toot_current) && ! empty($qiita_items_diff)) {
             // QiitadonユーザーのQiita記事の場合のメッセージ
             // ---------------------------------------------------------
             $msg =<<<EOD
-📰【お知らせ】 :qiitan:
-${atmark}${id_user_qiita} さんが #Qiita記事 を投稿しました！
+📰【お知らせ】:qiitan:
 
+🆕 ${atmark}${id_user_qiita} さんが #Qiita記事 を投稿しました！
 
-🆕『${item_title}』:qiita:
+:qiita: 『${item_title}』
 ${item_url}
 
 [ ${item_tags} ]${item_tags_additional}
@@ -300,8 +311,8 @@ EOD;
             // 基本メッセージ（Boostoot, 一般トゥート併用）
             // ---------------------------------------------------------
             $msg =<<<EOD
-『${item_title}』 ${atmark}${id_user_qiita}
-${item_url}
+『${item_title}』
+${item_url} by ${atmark}${id_user_qiita}
 
 [ ${item_tags} ]${item_tags_additional}
 EOD;
@@ -314,9 +325,9 @@ EOD;
             // 一般ユーザーのQiita記事の場合のメッセージ
             // ---------------------------------------------------------
             $msg =<<<EOD
-🆕【新着Qiita記事】:qiita:
+🆕【新着Qiita記事】
 
-${msg}\nBoostoot! → https://qiitadon.com/share?text=${msg_link_boostoot}
+:qiita: ${msg}\nBoostoot! → https://qiitadon.com/share?text=${msg_link_boostoot}
 EOD;
         }
 
