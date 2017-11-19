@@ -76,6 +76,7 @@ if (IS_REGULAR_JOB) {
     まプラグインの引数として渡されます。主にプラグインの直接実行テスト用。
 ------------------------------------------------------------------------ */
 if (IS_PLUGIN) {
+
     // プラグインの単体実行
     $result_raw   = call_plugin($_GET);
 
@@ -87,9 +88,9 @@ if (IS_PLUGIN) {
     $result_json  = print_r($result_json, true);
     // 表示
     echo <<<EOD
-<div>Responce of plugin (RAW):</div>
+<div>Responce from plugin (RAW):</div>
 <pre style='padding-left:4em;'>${result_raw}</pre>
-<div>Responce of plugin (Qithub API decoded):</div>
+<div>Responce from plugin (Qithub API decoded):</div>
 <pre style='padding-left:4em;'>${result_json}</pre>
 EOD;
 
