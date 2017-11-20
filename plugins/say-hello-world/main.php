@@ -26,7 +26,7 @@ $arg = get_api_input_as_array();
 $msg_additional = $arg['say_also'];
 
 // メッセージの作成（RAW）
-$msg_raw = trim("Hello World! ${msg_additional}");
+$msg_raw = trim("Hello World! from PHP! ${msg_additional}");
 
 // API準拠の出力結果作成
 $msg_api = [
