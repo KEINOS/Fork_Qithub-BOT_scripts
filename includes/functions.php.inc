@@ -4,6 +4,53 @@
    ===================================================================== */
 
 /**
+ * call_plugin function.
+ *
+ * `plugins`の単独実行用関数。引数に通常は $_GET の内容が渡される。
+ * 引数の配列で渡されるキー（下記以外はプラグイン依存）
+ *
+ *    必須
+ *        plugin_name => string : プラグイン名。プラグインディレクトリ名。
+ *
+ *    オプション
+ *        pg_lang => string : 実行するプログラム言語の拡張子（ドットなし）。
+ *                            プラグイン内に複数の`main.xxx`が存在する場
+ *                            合に指定。指定されていない場合は、本体スク
+ *                            リプト 'index.php' の $extension_types で
+ *                            指定されている順番で最初にマッチしたもの。
+ *        mode => string   ： 'debug'の場合は、本体スクリプトはデバッグ
+ *                            モードで動作している。
+ * クエリのリクエスト例
+ *    https://sample.com/qithub/?plugin_name=say-hello-world
+ *    https://sample.com/qithub/?plugin_name=say-hello-world&pg_lang=go
+ *    https://sample.com/qithub/?plugin_name=say-hello-world&mode=debug
+ *    https://sample.com/qithub/?plugin_name=say-hello-world&pg_lang=go&mode=debug
+ *
+ * @access public
+ * @param  array  $query
+ * @param  bool   $run_background trueの場合は
+ * @return array
+ */
+function call_plugin($query, $run_background = false)
+{
+    $isset_name = (isset($query['plugin_name']) && ! empty($query['plugin_name']));
+    $isset_lang = (isset($query['pg_lang']) && ! empty($query['pg_lang']));
+    if ($isset_name) {
+        $plugin_name = (string) $query['plugin_name'];
+        $plugin_dir  = "plugins/${plugin_name}";
+        $lang        = ($isset_lang) ? (string) $query['pg_lang'] : '';
+        $result      = run_script(
+            $plugin_dir,
+            $_GET,
+            $run_background,
+            $lang
+        );
+
+        return $result;
+    }
+}
+
+/**
  * run_script function.
  *
  * Qithub API に準拠した 'system' および 'plugin' のスクリプトを実行（指
@@ -22,12 +69,23 @@
  *                                  バッグクランド実行オプション。trueを
  *                                  指定した場合、実行結果を待たずにバッ
  *                                  クグラウンドで実行します
+ * @param  string  $pg_lang(default: '')
+ *                                  実行言語指定オプション。複数プログラ
+ *                                  ム言語がスクリプト・ディレクトリ内に
+ *                                  ある場合、実行する言語の拡張子を指定。
  * @return string                   実行結果を返します。URL エンコードさ
  *                                  れたJSONデータ文字列（Qithub API準拠）
  */
-function run_script($dir_name, $params, $run_background = true)
+function run_script($dir_name, $params, $run_background = true, $lang = '')
 {
-    $lang_type = get_lang_type($dir_name);
+    $lang_type = get_lang_type($dir_name, $lang);
+
+    if ($lang_type==false) {
+        $lang     = esc_html($lang);
+        $dir_name = esc_html($dir_name);
+        die("<b>Error:</b> Can't determine language type: '${lang}' in '${dir_name}'.");
+    }
+
     $command   = get_cli_command(
         $lang_type,
         $dir_name,
@@ -37,7 +95,7 @@ function run_script($dir_name, $params, $run_background = true)
     // NOTE: Be careful that commands are NOT single quoted
     //       but grave accent aka backquote/backtick.
     if ($run_background) {
-        $log  = `$command > /dev/null &`;
+        $log = `$command > /dev/null &`;
         $array_value = [
             'result' => 'OK',
             'value'  => "Running background.\n ${log}",
@@ -54,8 +112,9 @@ function run_script($dir_name, $params, $run_background = true)
 /**
  * decode_api_to_array function.
  *
- * Qithub 内の`system`および`plugins`からの出力結果の API データ・フォー
- * マット（URLエンコードされたJSON文字列）を PHP配列にデコードします。
+ * Qithub 内の `system` および `plugins` からの出力結果の API データ・
+ * フォーマット（URLエンコードされたJSON文字列）を PHP配列にデコードしま
+ * す。
  *
  * @access public
  * @param  string  $json_enc APIからのURLエンコード済みJSON
@@ -93,6 +152,7 @@ function encode_array_to_api($array_value)
 
     return $json_enc;
 }
+
 /* ---------------------------------------------------------------------
     セッター系 Functions
    --------------------------------------------------------------------- */
@@ -198,33 +258,95 @@ function set_env_utf8_ja($timezone = 'Asia/Tokyo')
 /**
  * get_lang_type function.
  *
- * 指定された 'system' および 'pugins' の スクリプトの実行言語を取得しま
- * す。第１引数に渡されたディレクトリ名より "main.xxx" の拡張子を調べ、
- * 該当する言語を返します。
+ * 'system' および 'plugins' で実行に必要なプログラム言語名を返します。
+ * 第１引数に渡されたディレクトリ名より "main.xxx" の拡張子を調べ、該当
+ * するプログラム言語を返します。第２引数で拡張子が指定してあった場合、
+ * 利用可能であれば、同様に該当するプログラム言語を返します。
+ *
+ * ex) $result = get_lang_type('plugins/sample');
  *
  * @access public
  * @param  string $dir_name  スクリプトのディレクトリ名
+ * @param  string $needle    優先して利用したい言語の拡張子。指定がない
+ *                           場合は`$extension_types`に最初にヒットした
+ *                           言語。
  * @return mixed             プログラム言語名。false の場合は引数に問題
  *                           があるか定義されていない拡張子が"main.xxxx"
  *                           に使われています。
  */
-function get_lang_type($dir_name)
+function get_lang_type($dir_name, $needle = '')
 {
-    global $extension_types;
+    global $extension_types; //システムの利用可能プログラム言語
 
-    $path_basic = "./${dir_name}/main";
+    $needle        = trim((string) $needle);
+    $list_ext_main = get_lang_list_main($dir_name);
 
-    foreach ($extension_types as $lang => $ext) {
-        if (file_exists($path_basic . $ext)) {
-            $result_lang = $lang;
-            break;
+    if (empty($list_ext_main)) {
+        debug_msg("There's no 'main.xxx' file at '${dir_name}'.");
+        return false;
+    }
+
+    if (! empty($needle) && ! empty($list_ext_main)) {
+        $ext_in_ext_types = array_search(".${needle}", $extension_types);
+        $ext_in_list_main = in_array($needle, $list_ext_main);
+        if ($ext_in_ext_types && $ext_in_list_main) {
+            $result_lang = $ext_in_ext_types;
         } else {
-            debug_msg("Can't determine extension type. File not exist at '${path_basic}'.");
+            debug_msg("Can't determine extension type. File not exist at '${dir_name}'.");
             $result_lang = false;
+        }
+    } else {
+        $result_lang   = false; //念のための初期化
+        $list_ext_main = array_flip($list_ext_main);
+
+        foreach ($extension_types as $lang => $ext) {
+            $ext = trim($ext, '.');
+            if (array_key_exists($ext, $list_ext_main)) {
+                $result_lang = $lang;
+                break;
+            }
+        }
+
+        if ($result_lang === false) {
+            debug_msg("Can't determine extension type. File not exist at '${dir_name}'.");
         }
     }
 
     return $result_lang;
+}
+
+/**
+ * get_lang_list_main function.
+ *
+ * 'plugins' / 'system' が実行できるプログラム言語の一覧を取得します。
+ * ディレクトリ内の"main.xxx" の拡張子一覧を返します。
+ *
+ * @access public
+ * @param  string $dir_name 'plugins/xxxxxxxx', 'system/xxxxxxxx'形式
+ * @return array
+ */
+function get_lang_list_main($dir_name)
+{
+    $dir_name = (string) $dir_name;
+    $dir_path = '.' . DIR_SEP .$dir_name;
+
+    if (dir_exists($dir_path)) {
+        $main_files = glob($dir_path . DIR_SEP .'main*');
+
+        //拡張子一覧を返す
+        return filter_var(
+            $main_files,
+            FILTER_CALLBACK,
+            [ "options" => function ($path) {
+                    return pathinfo($path, PATHINFO_EXTENSION);
+            }]
+        );
+    } else {
+        $dir_name = esc_html($dir_name);
+        debug_msg("Error: Can not find plugin at '${dir_name}'.");
+
+        return array();
+    }
 }
 
 /**
@@ -273,7 +395,7 @@ function get_cli_command($lang_type, $dir_name, $array_value)
 /**
  * get_path_script function.
  *
- * 'system' および 'plugins' 内の実行スクリプト（main.???まで）の絶対パス
+ * 'system' および 'plugins' 内の実行スクリプト（main.xxxまで）の絶対パス
  * を返します。
  *
  * @access public
@@ -287,13 +409,15 @@ function get_path_script($dir_name, $lang_type)
 {
     global $extension_types;
 
+    /* does lang type exists */
+
     $ext = $extension_types[$lang_type];
 
     $path_dir_scripts = '.' . DIR_SEP .$dir_name . DIR_SEP;
     $path_file_script = $path_dir_scripts . 'main' . $ext;
 
     if (! file_exists($path_file_script)) {
-        throw new Exception("不正なファイルパスの指定 ${path_file_script}");
+        debug_msg("不正なファイルパスの指定 ${path_file_script}");
         $path_file_script = "./unknown_path";
     } else {
         $path_file_script = realpath($path_file_script);
@@ -311,16 +435,29 @@ function get_path_script($dir_name, $lang_type)
  * @access public
  * @param  string $lang_type スクリプトの実行言語（'php','python',etc）
  * @return string            スクリプト言語のパス
+ * @ref: https://www.xrea.com/spec/ サーバーの利用可能CGI/SSI
  */
 function get_path_exe($lang_type)
 {
     $lang_type = strtolower($lang_type);
     switch ($lang_type) {
         case 'php':
-            $path_cli = '/usr/bin/php'; // PHP 7.0.22 cli
+            $path_cli = '/usr/local/bin/phpcli'; // php 7.0.22 cli
+            break;
+        case 'python':
+            $path_cli = '/usr/bin/python'; // python 2.7.5
+            break;
+        case 'ruby':
+            $path_cli = '/usr/bin/ruby'; // ruby 2.3.0p0
+            break;
+        case 'perl':
+            $path_cli = '/usr/bin/perl'; // perl 5 v16
+            break;
+        case 'go':
+            $path_cli = '/usr/bin/go run'; // go1.6.3
             break;
         default:
-            throw new Exception("不明なプログラム言語の指定 ${lang_type}");
+            debug_msg("不明なプログラム言語の指定 ${lang_type}");
             $path_cli = null;
             break;
     }
@@ -486,10 +623,10 @@ function delete_data($id_data)
 /**
  * esc_html function.
  *
- * デバッグなどでデータを表示する際のエスケープを行う。
+ * 引数の文字列をデバッグなどでデータを表示する際のエスケープに使う。
  *
  * @access public
- * @param mixed $string
+ * @param  string $string
  * @return void
  */
 function esc_html($string)
@@ -500,10 +637,87 @@ function esc_html($string)
         return '';
     }
 
-    $string = htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
+    //$string = htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
+    $string = htmlentities($string, ENT_QUOTES, 'UTF-8');
+    $string = str_replace('\\', '&#092;', $string);
 
     return $string;
 }
+
+/**
+ * sanitize_array_to_dump function.
+ * 配列をダンプ表示するためのエスケープ処理
+ *
+ * @access public
+ * @param  array  $array
+ * @return void
+ */
+function sanitize_array_to_dump($array)
+{
+    return filter_var(
+        $array,
+        FILTER_CALLBACK,
+        ["options" => function ($value) {
+            return esc_html($value);
+        }]
+    );
+}
+
+/**
+ * sanitize_id_user_qiita function.
+ *
+ * ユーザーの QiitaID が QiitadonID と同じであるとは限らないため、
+ * Qiitadonの禁則文字の置換処理を行う。
+ *
+ * @access public
+ * @param  string $string
+ * @return void
+ * @todo QiitaID と QiitadonID が違う人がいるので置き換えが必要。
+ * @note BOTのフォロワー情報から QiitaID は取得できる
+ */
+function sanitize_id_user_qiita($string)
+{
+    $string = trim((string) $string);
+
+    $table = [
+        'sample-user' => 'sample_user',
+    ];
+    $search  = array_keys($table);
+    $replace = array_values($table);
+
+    /* Common replacement */
+    $string = str_replace($search, $replace, $string);
+    $string = str_replace('@github', '', $string);
+    $string = str_replace('@', 'at', $string);
+    $string = str_replace('.', '_', $string);
+    $string = str_replace('-', '_', $string);
+
+    return $string;
+};
+
+/**
+ * sanitize_tagname_qiitadon function.
+ *
+ * Qiitaタグを Mastodon のハッシュタグ用に正規化変換
+ *
+ * @access public
+ * @param  string $string
+ * @return void
+ */
+function sanitize_tag_for_qiitadon($string)
+{
+    $string = (string) $string;
+    $string = mb_convert_kana($string, 'aKV');
+    $string = trim($string);
+    $string = str_replace('++', 'プラプラ', $string);
+    $string = str_replace('+', 'プラス', $string);
+    $string = str_replace('#', 'Sharp', $string);
+    $string = str_replace('.', '', $string);
+    $string = str_replace('-', '_', $string);
+
+    return $string;
+}
+
 
 /**
  * isValid_url function.
@@ -547,12 +761,15 @@ function isValid_url($sUrl)
  * ストークン（実際に使えるか否）かは確認しない。
  *
  * @access public
- * @param  mixed  $value_hash
+ * @param  string $value_hash
  * @param  int    $len_hash (default: 64)
  * @return bool
  */
 function isValid_hash($value_hash, $len_hash = 64)
 {
+    $value_hash = (string) $value_hash;
+    $len_hash   = (integer) $len_hash;
+
     if (strlen($value_hash) == $len_hash && ctype_xdigit($value_hash)) {
         return IS_VALID_HASH;
     } else {
@@ -560,61 +777,6 @@ function isValid_hash($value_hash, $len_hash = 64)
     }
 }
 
-/**
- * sanitize_id_user_qiita function.
- *
- * ユーザーの QiitaID が QiitadonID と同じであるとは限らないため、
- * Qiitadonの禁則文字の置換処理を行う。
- *
- * @access public
- * @param mixed $string
- * @return void
- * @todo QiitaID と QiitadonID が違う人がいるので置き換えが必要。
- * @note BOTのフォロワー情報から QiitaID は取得できる
- */
-function sanitize_id_user_qiita($string)
-{
-    $string = trim($string);
-
-    $table = [
-        'sample-user' => 'sample_user',
-    ];
-    $search  = array_keys($table);
-    $replace = array_values($table);
-
-    /* Common replacement */
-    $string = str_replace($search, $replace, $string);
-    $string = str_replace('@github', '', $string);
-    $string = str_replace('@', 'at', $string);
-    $string = str_replace('.', '_', $string);
-    $string = str_replace('.', '_', $string);
-    $string = str_replace('-', '_', $string);
-
-    return $string;
-};
-
-/**
- * sanitize_tagname_qiitadon function.
- *
- * Qiitaタグを Mastodon のハッシュタグ用に正規化変換
- *
- * @access public
- * @param mixed $string
- * @return void
- */
-function sanitize_tag_for_qiitadon($string)
-{
-    $string = (string) $string;
-    $string = mb_convert_kana($string, 'aKV');
-    $string = trim($string);
-    $string = str_replace('++', 'プラプラ', $string);
-    $string = str_replace('+', 'プラス', $string);
-    $string = str_replace('#', 'Sharp', $string);
-    $string = str_replace('.', '', $string);
-    $string = str_replace('-', '_', $string);
-
-    return $string;
-}
 
 /**
  * is_tag_test function.
@@ -660,7 +822,7 @@ function is_tag_test($tag)
  *    define('SAMPLE', 'sample');
  *    $s = "The value is {$with(SAMPLE)}.";
  * 注意：
- *    関数内で使う場合は`$with = "with";`を利用前に代入すること
+ *    関数・クラス内で使う場合は`$with = "with";`を利用前に代入すること
  *
  * @access public
  * @param mixed $value
@@ -721,7 +883,8 @@ function debug_msg($string, $return = false)
         $string = (string) $string;
         $string = esc_html($string);
         $line   = debug_backtrace()[1]['line'];
-        $string = "${string}【呼び出し元】 ${line}行{$with(BR_EOL)}";
+        $file   = debug_backtrace()[1]['function'];
+        $string = "${string}【呼び出し元】 ${line}行目 '${file}()' {$with(BR_EOL)}";
 
         if ($return) {
             return $string;
@@ -763,4 +926,18 @@ function echo_on_debug($expression, $title = '')
             echo "<div>${title}<pre>${expression}</pre></div>" . PHP_EOL;
         }
     }
+}
+
+/**
+ * dir_exists function.
+ *
+ * is_dir()の語感互換関数
+ *
+ * @access public
+ * @param  string $path_dir
+ * @return bool
+ */
+function dir_exists($path_dir)
+{
+    return is_dir((string) $path_dir);
 }
