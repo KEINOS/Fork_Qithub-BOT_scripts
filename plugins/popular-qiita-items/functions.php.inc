@@ -83,7 +83,8 @@ function get_api_input_as_json()
  * Qiita API に準拠した標準入力の第１引数を(RAWで)取得
  *
  * @access public
- * @return void
+ * @return string QithubAPIフォーマット文字列（URLエンコードJSON配列）
+ * @SuppressWarnings(PHPMD)
  */
 function get_stdin_first_arg()
 {
@@ -96,8 +97,9 @@ function get_stdin_first_arg()
             'result' => 'NG',
             'value'  => 'Argument is empty.'
         ];
-        $msg_enc = json_encode($msg_api);
-        $msg_enc = urlencode($msg_enc);
+        $msg_json = json_encode($msg_api);
+        $msg_enc  = urlencode($msg_json);
+
         die($msg_enc);
     }
 
