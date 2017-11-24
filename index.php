@@ -83,9 +83,11 @@ if (IS_PLUGIN) {
     // HTML表示用にエスケープ
     $result_array = sanitize_array_to_dump(decode_api_to_array($result_raw));
     $result_raw   = esc_html($result_raw);
+
     // データを再度JSONに変換（プラグインからの受け取った状態確認用）
-    $result_json  = json_encode($result_array, JSON_PRETTY_PRINT);
+    $result_json  = json_encode($result_array, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     $result_json  = print_r($result_json, true);
+
     // 表示
     echo <<<EOD
 <div>Responce from plugin (RAW):</div>
