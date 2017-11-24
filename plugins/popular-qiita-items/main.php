@@ -3,36 +3,26 @@
 include_once("constants.php.inc");
 include_once('functions.php.inc');
 
-// 日本語 UTF-8 タイムゾーンを東京にセット
-set_env_utf8_ja();
+// 標準入力を取得
+$arg = get_api_input_as_array();
 
-$saved = [
-    'one'   => 1,
-    'two'   => 2,
-    'three' => 3,
-];
+// デバッグモード取得
+$is_mode_debug = ( isset($arg['mode']) && 'debug' == $arg['mode'] );
 
-$new = [
-    'one'   => 1,
-    'three' => 3,
-    'four'  => 4,
-    'six'   => 6,
-];
+// 保存データのID（読み込みキー）
+$id_data = 'id_saved_data';
 
-//array_unshift($saved,$new);
-//$saved = $saved + $new;
-$diff = array_diff_key($new, $saved);
-$saved = $diff + $saved;
-
-print_r($saved);
-
-die;
+// 保存済みデータの読み込み
+$data_old = load($id_data);
+if ($data_old == IS_DATA_UNINITIALIZED) {
+    $data_old = array();
+}
 
 // 人気のQiita記事を取得
 $feed_url   = 'https://qiita.com/popular-items/feed';
 $feed_xml   = simplexml_load_file($feed_url);
 $feed_json  = json_encode($feed_xml);
-$feed_array = json_decode($feed_json,TRUE);
+$feed_array = json_decode($feed_json, true);
 
 foreach ($feed_array[entry] as $item) {
     $x              = array();
@@ -44,13 +34,30 @@ foreach ($feed_array[entry] as $item) {
     $x['published'] = (string)  $item[published];
     $x['updated']   = (string)  $item[updated];
 
-    $data[] = $x;
+    $data_new[$x['id']] = $x;
 }
 
-$result = [
-    'result' => 'OK',
-    'value' => $data
-];
+$data_diff = array_diff_key($data_new, $data_old);
+$data_new  = $data_diff + $data_old;
+
+// デバッグモード（"&mode=debug"）の場合は保存しない
+$is_saved_success = ($is_mode_debug) ?: save($id_data, $data_new);
+
+if ($is_saved_success) {
+    $result = [
+        'result' => 'OK',
+        'value' => [
+            'diff'  => $data_diff,
+            'top20' => $data_new,
+        ],
+    ];
+} else {
+    $result = [
+        'result' => 'NG',
+        'value' => 'Data save fail.',
+    ];
+}
+
 
 $json_raw = json_encode($result);
 $json_enc = urlencode($json_raw);
