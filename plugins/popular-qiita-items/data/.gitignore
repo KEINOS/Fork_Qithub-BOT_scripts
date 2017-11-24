@@ -1,0 +1,5 @@
+# GitIgnore
+# 参考文献： https://qiita.com/anqooqie/items/110957797b3d5280c44f
+
+# 拡張子".dat"はGit操作から無視する（自動作成されるデータファイルのため）
+*.dat
