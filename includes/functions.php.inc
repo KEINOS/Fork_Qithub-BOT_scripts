@@ -808,6 +808,20 @@ function is_tag_test($tag)
     return $result;
 }
 
+/**
+ * is_title_test function.
+ *
+ * 渡された文字列に「テスト」や「test」が含まれているか確認する。主に
+ * Qiita記事のタイトルなどに「テスト」が含まれているかのチェックに使う。
+ *
+ * @access public
+ * @param  string $title
+ * @return bool
+ */
+function is_title_test($title)
+{
+    return is_tag_test($title);
+}
 
 /* ---------------------------------------------------------------------
     環境／デバッグ用／その他 Functions
