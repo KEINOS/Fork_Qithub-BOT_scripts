@@ -413,7 +413,7 @@ EOD;
             $msg =<<<EOD
 🆕【新着Qiita記事】
 
-​${msg}\n\n>🔃​Boostoot! → https://qiitadon.com/share?text=${msg_link_boostoot}
+​${msg}\n\n🔃​Boostoot! → https://qiitadon.com/share?text=${msg_link_boostoot}
 EOD;
         }
 
