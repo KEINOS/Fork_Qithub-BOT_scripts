@@ -133,6 +133,10 @@ EOD;
         $tmp_tags = ''; // 文字数オーバー時のロールバック用
         ksort($list_tags_tooted); // タグ一覧を昇順でソート
         foreach ($list_tags_tooted as $tag) {
+            // 空白タグはスキップ
+            if( empty( trim( $tag )){
+                continue;
+            }
             $tmp_tag          = "#${tag}\n";
             $count_char_tag   = mb_strlen($tmp_tag);
             $count_char_tags  = mb_strlen($tmp_tags);
