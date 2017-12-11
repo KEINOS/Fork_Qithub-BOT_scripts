@@ -134,7 +134,7 @@ EOD;
         ksort($list_tags_tooted); // タグ一覧を昇順でソート
         foreach ($list_tags_tooted as $tag) {
             // 空白タグはスキップ
-            if( empty( trim( $tag )){
+            if ( empty(trim($tag)){
                 continue;
             }
             $tmp_tag          = "#${tag}\n";
