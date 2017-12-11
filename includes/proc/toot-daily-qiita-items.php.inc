@@ -384,7 +384,7 @@ if (! $is_new_toot && ! empty($id_toot_current) && ! empty($qiita_items_diff)) {
 :qiita:​『${item_title}』
 ${item_url}
 
-[ ${item_tags} ]${item_tags_additional}
+[ ${item_tags} ]${item_tags_additional} #${id_user_qiita}
 EOD;
         } else {
             $visibility = 'private';
@@ -395,7 +395,7 @@ EOD;
 :qiita:​『${item_title}』
 ${item_url} by ${atmark}${id_user_qiita}
 
-[ ${item_tags} ]${item_tags_additional}
+[ ${item_tags} ]${item_tags_additional} #${id_user_qiita}
 EOD;
 
             // Boostootのリンク作成
