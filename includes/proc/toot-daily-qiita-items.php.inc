@@ -121,10 +121,11 @@ EOD;
 EOD;
 
         // ペイン（CW、ヘッダー、フッター）の文字数をカウント
-        $count_char_pane  = mb_strlen($spoiler_text);
-        $count_char_pane += mb_strlen($msg_header);
-        $count_char_pane += mb_strlen($msg_footer);
-        $count_char_pane += mb_strlen("\n\n"); //タグ一覧の前後の改行ぶん
+        $count_char_pane  = mb_strlen($spoiler_text); // CW文のぶん
+        $count_char_pane += mb_strlen($msg_header);   // ヘッダー文のぶん
+        $count_char_pane += mb_strlen($msg_footer);   // フッター文のぶん
+        $count_char_pane += mb_strlen("\n\n");        // タグ一覧の前後の改行ぶん
+        $count_char_pane += mb_strlen('[nn/mm]');     // 取りまとめのページ分割表示ぶん
 
         // 設定：トゥート済みタグ一覧の抽出
         // 500文字（MAX_TOOT_CHAR）区切りで $msg_tags 配列にセット
@@ -138,7 +139,7 @@ EOD;
             $count_char_total = $count_char_tags + $count_char_pane;
 
             if (MAX_TOOT_CHAR <= $count_char_total) {
-                // オーバーぶんをロールバックして配列にセット
+                // MAX CHAR数を超えたらオーバーぶんをロールバックして配列にセット
                 $msg_tags[] = trim($tmp_tags);
                 $tmp_tags   = '';
                 $tmp_tags   = $tmp_tag;
