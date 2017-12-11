@@ -100,12 +100,12 @@ if ($is_new_toot) {
 
         // 取得：取りまとめ時刻
         $thread_date  = date("Y/m/d", strtotime($id_thread_last));
-        $thread_hour  = date("H 時", strtotime($id_thread_last));
+        $thread_hour  = date("H時", strtotime($id_thread_last));
 
         // CW文
         // -------------------------------------------------------------
         $spoiler_text =<<<EOD
-📋【​:qiita:​のタグ一覧】(${thread_date} ${thread_hour})
+📋【​:qiita:​のタグ一覧】(${thread_date}-${thread_hour})
 EOD;
         // ヘッダー文
         // -------------------------------------------------------------
