@@ -131,7 +131,7 @@ EOD;
         // 500文字（MAX_TOOT_CHAR）区切りで $msg_tags 配列にセット
         $msg_tags = array();
         $tmp_tags = ''; // 文字数オーバー時のロールバック用
-        ksort($list_tags_tooted); // タグ一覧を昇順でソート
+        natsort($list_tags_tooted); // タグ一覧を昇順でソート
         foreach ($list_tags_tooted as $tag) {
             // 空白タグはスキップ
             $tag = trim($tag);
