@@ -100,37 +100,45 @@ if ($is_new_toot) {
 
         // 取得：取りまとめ時刻
         $thread_date  = date("Y/m/d", strtotime($id_thread_last));
-        $thread_hour  = date("H 時", strtotime($id_thread_last));
+        $thread_hour  = date("H時", strtotime($id_thread_last));
 
         // CW文
         // -------------------------------------------------------------
         $spoiler_text =<<<EOD
-📋【​:qiita:​のタグ一覧】(${thread_date} ${thread_hour})
+📋【​:qiita:​のタグ一覧】(${thread_date}-${thread_hour})
 EOD;
         // ヘッダー文
         // -------------------------------------------------------------
         $msg_header =<<<EOD
-以下のタグの記事がこの１時間に :qiita: に投稿されました。
+以下のタグの Qiita 記事がこの１時間に投稿されました。
 ➖➖➖➖➖➖➖➖➖➖
 EOD;
         // フッター文
         // -------------------------------------------------------------
         $msg_footer =<<<EOD
 ➖➖➖➖➖➖➖➖➖➖
-これらのタグを含む記事へのリンクは、このトゥートのスレッドに「非公開」もしくは「未収載」でトゥートされています。
+各 Qiita 記事へのリンクは、このトゥートのスレッドに「非公開」もしくは「未収載」でトゥートされています。
+スレッドを見るにはこのトゥートをクリックしてください。
 EOD;
 
         // ペイン（CW、ヘッダー、フッター）の文字数をカウント
-        $count_char_pane  = mb_strlen($spoiler_text);
-        $count_char_pane += mb_strlen($msg_header);
-        $count_char_pane += mb_strlen($msg_footer);
-        $count_char_pane += mb_strlen("\n\n"); //タグ一覧の前後の改行ぶん
+        $count_char_pane  = mb_strlen($spoiler_text); // CW文のぶん
+        $count_char_pane += mb_strlen($msg_header);   // ヘッダー文のぶん
+        $count_char_pane += mb_strlen($msg_footer);   // フッター文のぶん
+        $count_char_pane += mb_strlen("\n\n");        // タグ一覧の前後の改行ぶん
+        $count_char_pane += mb_strlen('[nn/mm]');     // 取りまとめのページ分割表示ぶん
 
         // 設定：トゥート済みタグ一覧の抽出
         // 500文字（MAX_TOOT_CHAR）区切りで $msg_tags 配列にセット
         $msg_tags = array();
         $tmp_tags = ''; // 文字数オーバー時のロールバック用
+        natsort($list_tags_tooted); // タグ一覧を昇順でソート
         foreach ($list_tags_tooted as $tag) {
+            // 空白タグはスキップ
+            $tag = trim($tag);
+            if (empty($tag)) {
+                continue;
+            }
             $tmp_tag          = "#${tag}\n";
             $count_char_tag   = mb_strlen($tmp_tag);
             $count_char_tags  = mb_strlen($tmp_tags);
@@ -138,7 +146,7 @@ EOD;
             $count_char_total = $count_char_tags + $count_char_pane;
 
             if (MAX_TOOT_CHAR <= $count_char_total) {
-                // オーバーぶんをロールバックして配列にセット
+                // MAX CHAR数を超えたらオーバーぶんをロールバックして配列にセット
                 $msg_tags[] = trim($tmp_tags);
                 $tmp_tags   = '';
                 $tmp_tags   = $tmp_tag;
@@ -243,9 +251,9 @@ EOD;
 :qiita: 新着記事の紹介を開始します
 ➖➖➖➖➖➖➖➖➖➖
 
-Qiitadon ユーザーの新規 Qiita 記事を、このトゥートに「未収載」で返信していくよ。
+Qiitadon ユーザーの新規Qiita記事を、このトゥートに「未収載」で返信していくよ。
 
-残りの記事は「非公開」で返信しているので興味がある人はフォローしてね。
+他の新着Qiita記事は「非公開」で返信しているので興味がある人はフォローしてね。
 
 ${msg_additional}
 EOD;
@@ -382,7 +390,7 @@ if (! $is_new_toot && ! empty($id_toot_current) && ! empty($qiita_items_diff)) {
 :qiita:​『${item_title}』
 ${item_url}
 
-[ ${item_tags} ]${item_tags_additional}
+[ ${item_tags} ]${item_tags_additional} #${id_user_qiita}
 EOD;
         } else {
             $visibility = 'private';
@@ -393,7 +401,7 @@ EOD;
 :qiita:​『${item_title}』
 ${item_url} by ${atmark}${id_user_qiita}
 
-[ ${item_tags} ]${item_tags_additional}
+[ ${item_tags} ]${item_tags_additional} #${id_user_qiita}
 EOD;
 
             // Boostootのリンク作成
@@ -406,7 +414,7 @@ EOD;
             $msg =<<<EOD
 🆕【新着Qiita記事】
 
-​${msg}\nBoostoot! → https://qiitadon.com/share?text=${msg_link_boostoot}
+​${msg}\n\n🔃​Boostoot! → https://qiitadon.com/share?text=${msg_link_boostoot}
 EOD;
         }
 
