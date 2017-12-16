@@ -35,9 +35,14 @@ set_env_as(DEV);
 set_env_file('../../qithub.conf.json');
 
 // 'system' および 'plugin' で使えるサーバー側のプログラム言語（CLI）
+// 各言語のバージョンは './includes/functions.php' の`get_path_exe()`の
+// コメントを参照してください。
 $extension_types = [
-    'php'=>'.php',
-    'python' =>'.py',
+    'php'    => '.php',
+    'python' => '.py',
+    'ruby'   => '.rb',
+    'perl'   => '.pl',
+    'go'     => '.go',
 ];
 
 /* =====================================================================
@@ -71,8 +76,27 @@ if (IS_REGULAR_JOB) {
     まプラグインの引数として渡されます。主にプラグインの直接実行テスト用。
 ------------------------------------------------------------------------ */
 if (IS_PLUGIN) {
-    // call_plugin( $_GET );
-    echo 'プラグインを実行する予定（inprogress）';
+
+    // プラグインの単体実行
+    $result_raw   = call_plugin($_GET);
+
+    // HTML表示用にエスケープ
+    $result_array = sanitize_array_to_dump(decode_api_to_array($result_raw));
+    $result_raw   = esc_html($result_raw);
+
+    // データを再度JSONに変換（プラグインからの受け取った状態確認用）
+    $result_json  = json_encode($result_array, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    $result_json  = print_r($result_json, true);
+
+    // 表示
+    echo <<<EOD
+<div>Responce from plugin (RAW):</div>
+<pre style='padding-left:4em;'>${result_raw}</pre>
+<div>Responce from plugin (Qithub API decoded):</div>
+<pre style='padding-left:4em;'>${result_json}</pre>
+EOD;
+
+    die;
 }
 
 /* ---------------------------------------------------------------------
