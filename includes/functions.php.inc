@@ -130,6 +130,22 @@ function decode_api_to_array($json_enc)
 }
 
 /**
+ * decode_api_to_json function.
+ * 
+ * `system`, `plugins`の結果を JSON 文字列で返す。
+ * 
+ * @access public
+ * @param  string $json_enc URL-encoded JSON string
+ * @return string
+ */
+function decode_api_to_json($json_enc)
+{
+    $json_raw = urldecode($json_enc);
+
+    return $json_raw;    
+}
+
+/**
  * encode_array_to_api function.
  *
  * 配列を Qithub API データフォーマット（JSON & URLエンコード）にエンコー
@@ -442,7 +458,20 @@ function get_path_exe($lang_type)
     $lang_type = strtolower($lang_type);
     switch ($lang_type) {
         case 'php':
-            $path_cli = '/usr/local/bin/phpcli'; // php 7.0.22 cli
+            if( is_env_dev()){
+                $name_file_phpini = 'qithub.php.ini';
+                $path_file_phpini = "../${name_file_phpini}";
+                if(file_exists($path_file_phpini)){
+                    $path_file_phpini = realpath($path_file_phpini);
+                    $option_command = " -c ${path_file_phpini} ";
+                }else{
+                    $option_command = '';
+                }
+                $path_cli = '/usr/local/bin/phpcli'; // php 7.0.22 cli 
+                $path_cli = $path_cli . $option_command;
+            }else{
+                $path_cli = '/usr/local/bin/phpcli'; // php 7.0.22 cli
+            }
             break;
         case 'python':
             $path_cli = '/usr/bin/python'; // python 2.7.5
@@ -618,7 +647,7 @@ function delete_data($id_data)
 
 /* ---------------------------------------------------------------------
     サニタイズ（正規化）／バリデーション Functions
-   --------------------------------------------------------------------- */
+   ------------------------------------------------------------------ */
 
 /**
  * esc_html function.
