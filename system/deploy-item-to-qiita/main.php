@@ -1,10 +1,10 @@
 <?php
 /* =====================================================================
     deploy-item-to-qiita
-    
+
     指定された Qiita 記事 ID の GitHub (Qithub/items/）上のコンテンツを
     Qiita にデプロイ（更新）します。（作成済みの記事に限る）
-    
+
     仕様
         - Qiita 記事のステータスは「限定公開」のままです。トゥートによる
           「お気に入り」数によって公開される機能が実装される予定。
@@ -51,7 +51,7 @@ if (empty($args['max_tag_number'])) {
     $max_tag_number = MAX_TAG_NUM_QIITA;
 } else {
     $max_tag_number = $args['max_tag_number'];
-    if(MAX_TAG_NUM_QIITA < $max_tag_number){
+    if (MAX_TAG_NUM_QIITA < $max_tag_number) {
         $max_tag_number = MAX_TAG_NUM_QIITA;
     }
 }
@@ -94,7 +94,7 @@ $title   = trim($info_document[0], '#');
 $title   = ($is_env_dev) ? "${title} ${id_now}" : $title;
 
 $tags    = get_tags_as_array(trim($info_document[1], '[]'));
-$tags    = format_tags_for_qiita($tags,$max_tag_number);
+$tags    = format_tags_for_qiita($tags, $max_tag_number);
 
 $body    = get_lines_rest($content);
 

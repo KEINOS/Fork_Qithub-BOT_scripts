@@ -40,7 +40,7 @@ function patch_to_qiita($id_qiita, $data_json, $access_token)
 /**
  * post_to_qiita function.
  * 新規Qiita記事の投稿とその結果を返す。
- * 
+ *
  * @access public
  * @param  string $data_json
  * @param  string $access_token
@@ -247,10 +247,23 @@ function encode_array_to_api($array_value)
     return $json_enc;
 }
 
+/**
+ * print_output_as_api function.
+ *
+ * 処理結果を Qithub の スクリプト間 API に準拠して標準出力する
+ *
+ * @access public
+ * @param  string $status    "OK" or "NG" の文字列
+ * @param  string $contents  処理結果
+ * @return void
+ */
 function print_output_as_api($status, $contents)
 {
     $status = trim((string) $status);
     $status = ( 'ok' == $status ) ? 'OK' : $status;
+
+    $contents = (string) $contents;
+
     $array = [
         'result' => $status,
         'value'  => $contents,
@@ -338,9 +351,9 @@ function is_env_dev()
 
 /**
  * set_env_as_dev function.
- * 
+ *
  * 実行環境を DEVELOP か否かを設定する
- * 
+ *
  * @access public
  * @param  bool   $is_env_dev
  * @return bool
@@ -348,10 +361,10 @@ function is_env_dev()
 function set_env_as_dev($is_env_dev)
 {
     $is_env_dev = ($is_env_dev) ? true : false;
-    if(defined('IS_ENV_DEV')){
-        print_output_as_api('NG','Already defined IS_ENV_DEV');
+    if (defined('IS_ENV_DEV')) {
+        print_output_as_api('NG', 'Already defined IS_ENV_DEV');
     }
-    
+
     return define('IS_ENV_DEV', $is_env_dev);
 }
 
