@@ -185,6 +185,7 @@ if (IS_PROCESS) {
         //    '&id=ITEM_ID'     : Qiita 記事ID
         case 'deploy-item-to-qiita':
             include_once('./includes/proc/deploy-item-to-qiita.php.inc');
+            break;
 
         default:
             echo 'その他の処理';
