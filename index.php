@@ -177,6 +177,16 @@ if (IS_PROCESS) {
             include_once('./includes/proc/roll-dice.php.inc');
             break;
 
+        // 'deploy-item-to-qiita'
+        // -------------------------------------------------------------
+        // Qithub-BOT/items/ 上の Qiita 記事を Qiita に上書きする
+        //
+        // クエリの引数オプション
+        //    '&id=ITEM_ID'     : Qiita 記事ID
+        case 'deploy-item-to-qiita':
+            include_once('./includes/proc/deploy-item-to-qiita.php.inc');
+            break;
+
         default:
             echo 'その他の処理';
     }
